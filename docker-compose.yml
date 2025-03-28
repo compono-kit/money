@@ -1,0 +1,22 @@
+services:
+  money_app:
+    build:
+      dockerfile: Dockerfile
+      context: .docker/php
+    container_name: money_app
+    restart: always
+    working_dir: /app
+    volumes:
+      - ./:/app
+      - ./:/var/www/html:delegated
+
+  money_composer:
+    build:
+      dockerfile: Dockerfile
+      context: .docker/composer
+    container_name: money_composer
+    restart: always
+    working_dir: /app
+    volumes:
+      - ./:/app
+      - ./:/var/www/html:delegated

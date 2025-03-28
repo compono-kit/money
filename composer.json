@@ -1,0 +1,52 @@
+{
+	"name": "componium/money",
+	"description": "Wrapper with interfaces for moneyphp/money",
+	"homepage": "https://github.com/hansel23/money",
+	"license": "proprietary",
+	"authors": [
+		{
+			"name": "Benjamin Bruska",
+			"email": "benjamin.bruska@your-coder.de"
+		}
+	],
+	"require": {
+		"php": ">=8.4",
+		"ext-json": "*",
+		"ext-bcmath": "*",
+		"moneyphp/money": "^4.0.0",
+		"ext-intl": "*"
+	},
+	"require-dev": {
+		"roave/security-advisories": "dev-latest",
+		"hansel23/tooly-composer-script": "^2.0.0"
+	},
+	"repositories": {
+		"hansel23/tooly-composer-script": {
+			"type": "vcs",
+			"url": "git@github.com:Hansel23/tooly-composer-script.git"
+		}
+	},
+	"autoload": {
+		"psr-4": {
+			"Componium\\Money\\": "src/"
+		}
+	},
+	"autoload-dev": {
+		"psr-4": {
+			"Componium\\Money\\Tests\\Unit\\": "tests/Unit"
+		}
+	},
+	"scripts": {
+		"post-install-cmd": "Hansel23\\Tooly\\ScriptHandler::installPharTools",
+		"post-update-cmd": "Hansel23\\Tooly\\ScriptHandler::installPharTools"
+	},
+	"extra": {
+		"tools": {
+			"phpunit": {
+				"url": "https://phar.phpunit.de/phpunit-11.phar",
+				"only-dev": true
+			}
+		}
+	}
+}
+
