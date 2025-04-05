@@ -7,7 +7,7 @@ use Componium\Money\Interfaces\RepresentsMoney;
 
 class ExtractedPercentage implements RepresentExtractedPercentage
 {
-	public function __construct( private RepresentsMoney $percentage, private RepresentsMoney $subTotal )
+	public function __construct( private readonly RepresentsMoney $percentage, private readonly RepresentsMoney $subTotal )
 	{
 	}
 

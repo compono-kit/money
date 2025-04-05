@@ -4,30 +4,16 @@ namespace Componium\Money\Tests\Unit;
 
 use Componium\Money\Exceptions\CurrencyMismatchException;
 use Componium\Money\Money;
-use PHPUnit\Framework\Attributes\Depends;
 use PHPUnit\Framework\TestCase;
 
 class MoneyTest extends TestCase
 {
-	public function testObjectCanBeConstructedForValidConstructorArguments()
+	public function testObjectCanBeConstructed(): void
 	{
-		$m = new Money( 0, 'EUR' );
-
-		self::assertInstanceOf( 'Componium\\Money\\Money', $m );
-
-		return $m;
+		self::assertInstanceOf( Money::class, new Money( 0, 'EUR' ) );
 	}
 
-	public function testObjectCanBeConstructedForValidConstructorArguments2()
-	{
-		$m = new Money( 0, 'EUR' );
-
-		self::assertInstanceOf( 'Componium\\Money\\Money', $m );
-
-		return $m;
-	}
-
-	public function testObjectCanBeConstructedFromAnotherMoneyObject(): void
+	public function testObjectCanBeConstructedWithNewByMoney(): void
 	{
 		self::assertEquals(
 			new Money( 1234, 'EUR' ),
@@ -35,16 +21,14 @@ class MoneyTest extends TestCase
 		);
 	}
 
-	#[Depends('testObjectCanBeConstructedForValidConstructorArguments')]
-	public function testAmountCanBeRetrieved( Money $m ): void
+	public function testGetAmount(): void
 	{
-		self::assertEquals( 0, $m->getAmount() );
+		self::assertEquals( 0, new Money( 1234, 'EUR' )->getAmount() );
 	}
 
-	#[Depends('testObjectCanBeConstructedForValidConstructorArguments')]
-	public function testCurrencyCanBeRetrieved( Money $m ): void
+	public function testGetCurrencyCode(): void
 	{
-		self::assertEquals( 'EUR', $m->getCurrencyCode() );
+		self::assertEquals( 'EUR', new Money( 0, 'EUR' )->getCurrencyCode() );
 	}
 
 	public function testAnotherMoneyObjectWithSameCurrencyCanBeAdded(): void
@@ -134,17 +118,17 @@ class MoneyTest extends TestCase
 
 	public function testModulo(): void
 	{
-		self::assertEquals( new Money( 2, 'EUR' ), (new Money( 5, 'EUR' ))->mod( (new Money( 3, 'EUR' )) ) );
+		self::assertEquals( new Money( 2, 'EUR' ), new Money( 5, 'EUR' )->mod( new Money( 3, 'EUR' ) ) );
 	}
 
 	public function testAbsolute(): void
 	{
-		self::assertEquals( new Money( 2, 'EUR' ), (new Money( -2, 'EUR' ))->absolute() );
+		self::assertEquals( new Money( 2, 'EUR' ), new Money( -2, 'EUR' )->absolute() );
 	}
 
 	public function testNegate(): void
 	{
-		self::assertEquals( new Money( -2, 'EUR' ), (new Money( 2, 'EUR' ))->negate() );
+		self::assertEquals( new Money( -2, 'EUR' ), new Money( 2, 'EUR' )->negate() );
 	}
 
 	public function testRatioOf(): void
@@ -157,23 +141,23 @@ class MoneyTest extends TestCase
 
 	public function testIsZero(): void
 	{
-		self::assertFalse( (new Money( 1, 'EUR' ))->isZero() );
-		self::assertFalse( (new Money( -1, 'EUR' ))->isZero() );
-		self::assertTrue( (new Money( 0, 'EUR' ))->isZero() );
+		self::assertFalse( new Money( 1, 'EUR' )->isZero() );
+		self::assertFalse( new Money( -1, 'EUR' )->isZero() );
+		self::assertTrue( new Money( 0, 'EUR' )->isZero() );
 	}
 
 	public function testIsPositive(): void
 	{
-		self::assertFalse( (new Money( -1, 'EUR' ))->isPositive() );
-		self::assertFalse( (new Money( 0, 'EUR' ))->isPositive() );
-		self::assertTrue( (new Money( 1, 'EUR' ))->isPositive() );
+		self::assertFalse( new Money( -1, 'EUR' )->isPositive() );
+		self::assertFalse( new Money( 0, 'EUR' )->isPositive() );
+		self::assertTrue( new Money( 1, 'EUR' )->isPositive() );
 	}
 
 	public function testIsNegative(): void
 	{
-		self::assertFalse( (new Money( 0, 'EUR' ))->isNegative() );
-		self::assertFalse( (new Money( 1, 'EUR' ))->isNegative() );
-		self::assertTrue( (new Money( -1, 'EUR' ))->isNegative() );
+		self::assertFalse( new Money( 0, 'EUR' )->isNegative() );
+		self::assertFalse( new Money( 1, 'EUR' )->isNegative() );
+		self::assertTrue( new Money( -1, 'EUR' )->isNegative() );
 	}
 
 	public function testCanBeAllocatedToNumberOfTargets(): void
@@ -274,8 +258,8 @@ class MoneyTest extends TestCase
 
 	public function testHasSameCurrency(): void
 	{
-		self::assertTrue( (new Money( 1, 'EUR' ))->hasSameCurrency( new Money( 5, 'EUR' ) ) );
-		self::assertFalse( (new Money( 1, 'EUR' ))->hasSameCurrency( new Money( 1, 'USD' ) ) );
+		self::assertTrue( new Money( 1, 'EUR' )->hasSameCurrency( new Money( 5, 'EUR' ) ) );
+		self::assertFalse( new Money( 1, 'EUR' )->hasSameCurrency( new Money( 1, 'USD' ) ) );
 	}
 
 	public function testExceptionIsRaisedWhenCallingEqualsWithMoneyObjectWithDifferentCurrency(): void

@@ -31,7 +31,7 @@ Wrapper for moneyphp/money with additional Interfaces.
 (new Money( 5000, 'EUR' ))->ratioOf( new Money( 10000, 'EUR' ) ); //0.5
 (new Money( 5000, 'EUR' ))->ratioOf( new Money( 2500, 'EUR' ) ); //2
 
-(new Money( 5000, 'EUR' ))->getCurrency()->getCode() ; //EUR
+(new Money( 5000, 'EUR' ))->getCurrencyCode() ; //EUR
 (new Money( 5000, 'EUR' ))->hasSameCurrency( new Money( 5000, 'USD' ) ) ; //false
 ````
 
@@ -109,11 +109,11 @@ DecimalMoneyFormatter::format( new Money( -50090090, 'EUR' ) ); //-500900.90
 IntlMoneyFormatter::format( new Money( 0, 'EUR' ), 'en_US' ); //€0.00
 IntlMoneyFormatter::format( new Money( 0, 'EUR' ), 'de_DE' ); //0,00 €
 IntlMoneyFormatter::format( new Money( 50090090, 'EUR' ), 'en_US' ); //€500,900.90
-IntlMoneyFormatter::format(  new Money( 50090090, 'EUR' ), 'de_DE' ); //500.900,90 €
+IntlMoneyFormatter::format( new Money( 50090090, 'EUR' ), 'de_DE' ); //500.900,90 €
 
 IntlDecimalFormatter::format( new Money( 0, 'EUR' ), 'de_DE' ); //0
 IntlDecimalFormatter::format( new Money( 50090090, 'EUR' ), 'en_US' ); //500,900.9
-IntlDecimalFormatter::format(  new Money( 50090090, 'EUR' ), 'de_DE' ); //500.900,9
+IntlDecimalFormatter::format( new Money( 50090090, 'EUR' ), 'de_DE' ); //500.900,9
 ````
 
 ## Docker

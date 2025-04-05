@@ -5,11 +5,12 @@ namespace Componium\Money\Tests\Unit\Formatters;
 use Componium\Money\Formatters\IntlDecimalFormatter;
 use Componium\Money\Interfaces\RepresentsMoney;
 use Componium\Money\Money;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 class IntlDecimalFormatterTest extends TestCase
 {
-	public function MoneyDataProvider(): array
+	public static function MoneyDataProvider(): array
 	{
 		return [
 			[ new Money( 0, 'EUR' ), 'de_DE', '0' ],
@@ -28,13 +29,7 @@ class IntlDecimalFormatterTest extends TestCase
 		];
 	}
 
-	/**
-	 * @dataProvider MoneyDataProvider
-	 *
-	 * @param RepresentsMoney $money
-	 * @param string          $locale
-	 * @param string          $expectedOutput
-	 */
+	#[DataProvider('MoneyDataProvider')]
 	public function testIfFormattingReturnsExpectedOutput( RepresentsMoney $money, string $locale, string $expectedOutput ): void
 	{
 		self::assertEquals( $expectedOutput, IntlDecimalFormatter::format( $money, $locale ) );

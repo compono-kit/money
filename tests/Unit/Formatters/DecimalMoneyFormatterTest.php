@@ -5,11 +5,12 @@ namespace Componium\Money\Tests\Unit\Formatters;
 use Componium\Money\Formatters\DecimalMoneyFormatter;
 use Componium\Money\Interfaces\RepresentsMoney;
 use Componium\Money\Money;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 class DecimalMoneyFormatterTest extends TestCase
 {
-	public function MoneyDataProvider(): array
+	public static function MoneyDataProvider(): array
 	{
 		return [
 			[ new Money( 0, 'EUR' ), '0.00' ],
@@ -21,12 +22,7 @@ class DecimalMoneyFormatterTest extends TestCase
 		];
 	}
 
-	/**
-	 * @dataProvider MoneyDataProvider
-	 *
-	 * @param RepresentsMoney $money
-	 * @param string          $expectedOutput
-	 */
+	#[DataProvider('MoneyDataProvider')]
 	public function testIfFormattingReturnsExpectedOutput( RepresentsMoney $money, string $expectedOutput ): void
 	{
 		self::assertEquals( $expectedOutput, DecimalMoneyFormatter::format( $money ) );
