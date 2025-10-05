@@ -1,10 +1,10 @@
 services:
-  money_app:
+  money_lib:
     build:
       dockerfile: Dockerfile
       context: .docker/php
-    container_name: money_app
-    restart: always
+    container_name: money_lib
+    restart: no
     working_dir: /app
     volumes:
       - ./:/app
@@ -15,8 +15,12 @@ services:
       dockerfile: Dockerfile
       context: .docker/composer
     container_name: money_composer
-    restart: always
+    restart: no
     working_dir: /app
     volumes:
       - ./:/app
       - ./:/var/www/html:delegated
+networks:
+  default:
+    external: true
+    name: shared

@@ -1,12 +1,12 @@
 <?php declare(strict_types=1);
 
-namespace Componium\Money\Interfaces;
+namespace ComponoKit\Money\Interfaces;
 
-interface RepresentsMoney
+interface RepresentsMoney extends \JsonSerializable, \Stringable
 {
 	public function getAmount(): int;
 
-	public function getCurrencyCode(): string;
+	public function getCurrency(): RepresentsCurrency;
 
 	public function add( RepresentsMoney $other ): RepresentsMoney;
 
@@ -31,18 +31,16 @@ interface RepresentsMoney
 	public function isNegative(): bool;
 
 	/**
-	 * @param int $targetCount
-	 *
-	 * @return RepresentsMoney[]
+	 * @return \Iterator<int,RepresentsMoney>
 	 */
-	public function allocateToTargets( int $targetCount ): array;
+	public function allocateToTargets( int $numberOfTargets ): \Iterator;
 
 	/**
 	 * @param array|int[] $ratios
 	 *
-	 * @return RepresentsMoney[]
+	 * @return \Iterator<int,RepresentsMoney>
 	 */
-	public function allocateByRatios( array $ratios ): array;
+	public function allocateByRatios( array $ratios ): \Iterator;
 
 	public function extractPercentage( float $percentage, int $roundingMode = PHP_ROUND_HALF_UP ): RepresentExtractedPercentage;
 

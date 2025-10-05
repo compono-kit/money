@@ -1,9 +1,9 @@
 <?php declare(strict_types=1);
 
-namespace Componium\Money;
+namespace ComponoKit\Money;
 
-use Componium\Money\Interfaces\RepresentExtractedPercentage;
-use Componium\Money\Interfaces\RepresentsMoney;
+use ComponoKit\Money\Interfaces\RepresentExtractedPercentage;
+use ComponoKit\Money\Interfaces\RepresentsMoney;
 
 class ExtractedPercentage implements RepresentExtractedPercentage
 {

@@ -1,15 +1,21 @@
 <?php declare(strict_types=1);
 
-namespace Componium\Money\Formatters;
+namespace ComponoKit\Money\Formatters;
 
-use Componium\Money\Interfaces\RepresentsMoney;
+use ComponoKit\Money\Interfaces\FormatsMoneyString;
+use ComponoKit\Money\Interfaces\RepresentsMoney;
 use Money\Currencies\ISOCurrencies;
 use Money\Currency;
 use Money\Formatter\DecimalMoneyFormatter as BaseDecimalMoneyFormatter;
 use Money\Money;
 
-class DecimalMoneyFormatter
+class DecimalMoneyFormatter implements FormatsMoneyString
 {
+	public function formatString( RepresentsMoney $money ): string
+	{
+		return self::format( $money );
+	}
+
 	public static function format( RepresentsMoney $money ): string
 	{
 		return new BaseDecimalMoneyFormatter( new ISOCurrencies() )->format(

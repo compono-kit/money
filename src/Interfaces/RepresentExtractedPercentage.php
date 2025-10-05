@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace Componium\Money\Interfaces;
+namespace ComponoKit\Money\Interfaces;
 
 interface RepresentExtractedPercentage
 {

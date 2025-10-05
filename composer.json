@@ -1,7 +1,9 @@
 {
-	"name": "componium/money",
+	"name": "compono-kit/money",
 	"description": "Wrapper with interfaces for moneyphp/money",
 	"homepage": "https://github.com/hansel23/money",
+	"minimum-stability": "dev",
+	"prefer-stable": true,
 	"license": "proprietary",
 	"authors": [
 		{
@@ -13,8 +15,8 @@
 		"php": ">=8.4",
 		"ext-json": "*",
 		"ext-bcmath": "*",
-		"moneyphp/money": "^4.0.0",
-		"ext-intl": "*"
+		"ext-intl": "*",
+		"moneyphp/money": "^4.0.0"
 	},
 	"require-dev": {
 		"roave/security-advisories": "dev-latest",
@@ -28,12 +30,12 @@
 	},
 	"autoload": {
 		"psr-4": {
-			"Componium\\Money\\": "src/"
+			"ComponoKit\\Money\\": "src/"
 		}
 	},
 	"autoload-dev": {
 		"psr-4": {
-			"Componium\\Money\\Tests\\Unit\\": "tests/Unit"
+			"ComponoKit\\Money\\Tests\\Unit\\": "tests/Unit"
 		}
 	},
 	"scripts": {
