@@ -1,19 +1,14 @@
 # Money
 
-Wrapper for moneyphp/money with additional Interfaces.
+Implementation for compomo-kit/money-interfaces
 
-* **Bcmath-Extension required**
-* **Intl-Extension required for IntlFormatter**
-
-## Inhalt
+## Contents
 
 * [Basics](#basics)
 * [Comparisons](#comparisons)
 * [Allocation](#allocation)
 * [Value added tax calculation](#value-added-tax-calculation)
 * [Json](#json)
-* [Formatting](#formatting)
-* [Docker](#docker)
 
 ## Basics
 
@@ -98,26 +93,3 @@ $extractedPercentage->getPercentage(); //Mwst.-Betrag
 ````PHP
 json_encode( (new Money( 5000, 'EUR' )) ); //{ "amount": "5000", "currency": "EUR" }
 ````
-
-## Formatting
-
-````PHP
-DecimalMoneyFormatter::format( new Money( 0, 'EUR' ) ); //0.00
-DecimalMoneyFormatter::format( new Money( 50090090, 'EUR' ) ); //500900.90
-DecimalMoneyFormatter::format( new Money( -50090090, 'EUR' ) ); //-500900.90
-
-IntlMoneyFormatter::format( new Money( 0, 'EUR' ), 'en_US' ); //€0.00
-IntlMoneyFormatter::format( new Money( 0, 'EUR' ), 'de_DE' ); //0,00 €
-IntlMoneyFormatter::format( new Money( 50090090, 'EUR' ), 'en_US' ); //€500,900.90
-IntlMoneyFormatter::format( new Money( 50090090, 'EUR' ), 'de_DE' ); //500.900,90 €
-
-IntlDecimalFormatter::format( new Money( 0, 'EUR' ), 'de_DE' ); //0
-IntlDecimalFormatter::format( new Money( 50090090, 'EUR' ), 'en_US' ); //500,900.9
-IntlDecimalFormatter::format( new Money( 50090090, 'EUR' ), 'de_DE' ); //500.900,9
-````
-
-## Docker
-
-* `docker-compose build --build-arg GITHUB_TOKEN="{TOKEN}"`
-* `docker-compose up -d`
-* `docker-compose run --rm money_composer update -vvv` or `docker exec -it money_composer sh` and run there `composer update -vvv`

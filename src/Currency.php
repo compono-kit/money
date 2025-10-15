@@ -7,9 +7,9 @@ use ComponoKit\Money\Interfaces\RepresentsCurrency;
 
 class Currency implements RepresentsCurrency
 {
-	private readonly string $isoCode;
+	private string $isoCode;
 
-	public function __construct( string $isoCode, private readonly string $symbol, private readonly int $minorUnitFactor )
+	public function __construct( string $isoCode, private string $symbol, private int $minorUnitFactor )
 	{
 		if ( !preg_match( '/^[A-Z]{3}$/', strtoupper( $isoCode ) ) )
 		{

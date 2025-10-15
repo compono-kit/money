@@ -1,40 +1,35 @@
 <?php declare(strict_types=1);
 
-namespace Componium\Money\Tests\Unit;
+namespace ComponoKit\Money\Tests\Unit;
 
-use Componium\Money\Exceptions\CurrencyMismatchException;
-use Componium\Money\Money;
+use ComponoKit\Money\Currency;
+use ComponoKit\Money\Exceptions\CurrencyMismatchException;
+use ComponoKit\Money\Interfaces\RepresentsCurrency;
+use ComponoKit\Money\Money;
 use PHPUnit\Framework\TestCase;
 
 class MoneyTest extends TestCase
 {
+
 	public function testObjectCanBeConstructed(): void
 	{
-		self::assertInstanceOf( Money::class, new Money( 0, 'EUR' ) );
-	}
-
-	public function testObjectCanBeConstructedWithNewByMoney(): void
-	{
-		self::assertEquals(
-			new Money( 1234, 'EUR' ),
-			Money::newByMoney( new Money( 1234, 'EUR' ) )
-		);
+		self::assertInstanceOf( Money::class, new Money( 0, $this->buildEurCurrency() ) );
 	}
 
 	public function testGetAmount(): void
 	{
-		self::assertEquals( 0, new Money( 1234, 'EUR' )->getAmount() );
+		self::assertEquals( 1234, (new Money( 1234, $this->buildEurCurrency() ))->getAmount() );
 	}
 
 	public function testGetCurrencyCode(): void
 	{
-		self::assertEquals( 'EUR', new Money( 0, 'EUR' )->getCurrencyCode() );
+		self::assertEquals( 'EUR', (new Money( 0, $this->buildEurCurrency() ))->getCurrencyCode() );
 	}
 
 	public function testAnotherMoneyObjectWithSameCurrencyCanBeAdded(): void
 	{
-		$a = new Money( 1, 'EUR' );
-		$b = new Money( 2, 'EUR' );
+		$a = new Money( 1, $this->buildEurCurrency() );
+		$b = new Money( 2, $this->buildEurCurrency() );
 		$c = $a->add( $b );
 
 		self::assertEquals( 1, $a->getAmount() );
@@ -46,16 +41,16 @@ class MoneyTest extends TestCase
 	{
 		$this->expectException( CurrencyMismatchException::class );
 
-		$a = new Money( 1, 'EUR' );
-		$b = new Money( 2, 'USD' );
+		$a = new Money( 1, $this->buildEurCurrency() );
+		$b = new Money( 2, $this->buildUsdCurrency() );
 
 		$a->add( $b );
 	}
 
 	public function testAnotherMoneyObjectWithSameCurrencyCanBeSubtracted(): void
 	{
-		$a = new Money( 1, 'EUR' );
-		$b = new Money( 2, 'EUR' );
+		$a = new Money( 1, $this->buildEurCurrency() );
+		$b = new Money( 2, $this->buildEurCurrency() );
 		$c = $b->subtract( $a );
 
 		self::assertEquals( 1, $a->getAmount() );
@@ -67,15 +62,15 @@ class MoneyTest extends TestCase
 	{
 		$this->expectException( CurrencyMismatchException::class );
 
-		$a = new Money( 1, 'EUR' );
-		$b = new Money( 2, 'USD' );
+		$a = new Money( 1, $this->buildEurCurrency() );
+		$b = new Money( 2, $this->buildUsdCurrency() );
 
 		$b->subtract( $a );
 	}
 
 	public function testCanBeNegated(): void
 	{
-		$a = new Money( 1, 'EUR' );
+		$a = new Money( 1, $this->buildEurCurrency() );
 		$b = $a->negate();
 
 		self::assertEquals( 1, $a->getAmount() );
@@ -84,7 +79,7 @@ class MoneyTest extends TestCase
 
 	public function testCanBeMultipliedByAFactor(): void
 	{
-		$a = new Money( 1, 'EUR' );
+		$a = new Money( 1, $this->buildEurCurrency() );
 		$b = $a->multiply( 2 );
 
 		self::assertEquals( 1, $a->getAmount() );
@@ -95,13 +90,13 @@ class MoneyTest extends TestCase
 	{
 		$this->expectException( \DomainException::class );
 
-		$a = new Money( 1, 'EUR' );
+		$a = new Money( 1, $this->buildEurCurrency() );
 		$a->multiply( 2, 0 );
 	}
 
 	public function testCanBeDividedByAFactor(): void
 	{
-		$a = new Money( 6, 'EUR' );
+		$a = new Money( 6, $this->buildEurCurrency() );
 		$b = $a->divide( 2 );
 
 		self::assertEquals( 6, $a->getAmount() );
@@ -112,233 +107,288 @@ class MoneyTest extends TestCase
 	{
 		$this->expectException( \DomainException::class );
 
-		$a = new Money( 6, 'EUR' );
+		$a = new Money( 6, $this->buildEurCurrency() );
 		$a->divide( 2, 0 );
 	}
 
 	public function testModulo(): void
 	{
-		self::assertEquals( new Money( 2, 'EUR' ), new Money( 5, 'EUR' )->mod( new Money( 3, 'EUR' ) ) );
+		self::assertEquals( new Money( 2, $this->buildEurCurrency() ), (new Money( 5, $this->buildEurCurrency() ))->mod( new Money( 3, $this->buildEurCurrency() ) ) );
 	}
 
 	public function testAbsolute(): void
 	{
-		self::assertEquals( new Money( 2, 'EUR' ), new Money( -2, 'EUR' )->absolute() );
+		self::assertEquals( new Money( 2, $this->buildEurCurrency() ), (new Money( -2, $this->buildEurCurrency() ))->absolute() );
 	}
 
 	public function testNegate(): void
 	{
-		self::assertEquals( new Money( -2, 'EUR' ), new Money( 2, 'EUR' )->negate() );
+		self::assertEquals( new Money( -2, $this->buildEurCurrency() ), (new Money( 2, $this->buildEurCurrency() ))->negate() );
 	}
 
 	public function testRatioOf(): void
 	{
-		$money = new Money( 10, 'EUR' );
+		$money = new Money( 10, $this->buildEurCurrency() );
 
-		self::assertEquals( 2, $money->ratioOf( new Money( 5, 'EUR' ) ) );
-		self::assertEquals( 0.5, $money->ratioOf( new Money( 20, 'EUR' ) ) );
+		self::assertEquals( 2, $money->ratioOf( new Money( 5, $this->buildEurCurrency() ) ) );
+		self::assertEquals( 0.5, $money->ratioOf( new Money( 20, $this->buildEurCurrency() ) ) );
 	}
 
 	public function testIsZero(): void
 	{
-		self::assertFalse( new Money( 1, 'EUR' )->isZero() );
-		self::assertFalse( new Money( -1, 'EUR' )->isZero() );
-		self::assertTrue( new Money( 0, 'EUR' )->isZero() );
+		self::assertFalse( (new Money( 1, $this->buildEurCurrency() ))->isZero() );
+		self::assertFalse( (new Money( -1, $this->buildEurCurrency() ))->isZero() );
+		self::assertTrue( (new Money( 0, $this->buildEurCurrency() ))->isZero() );
 	}
 
 	public function testIsPositive(): void
 	{
-		self::assertFalse( new Money( -1, 'EUR' )->isPositive() );
-		self::assertFalse( new Money( 0, 'EUR' )->isPositive() );
-		self::assertTrue( new Money( 1, 'EUR' )->isPositive() );
+		self::assertFalse( (new Money( -1, $this->buildEurCurrency() ))->isPositive() );
+		self::assertFalse( (new Money( 0, $this->buildEurCurrency() ))->isPositive() );
+		self::assertTrue( (new Money( 1, $this->buildEurCurrency() ))->isPositive() );
 	}
 
 	public function testIsNegative(): void
 	{
-		self::assertFalse( new Money( 0, 'EUR' )->isNegative() );
-		self::assertFalse( new Money( 1, 'EUR' )->isNegative() );
-		self::assertTrue( new Money( -1, 'EUR' )->isNegative() );
+		self::assertFalse( (new Money( 0, $this->buildEurCurrency() ))->isNegative() );
+		self::assertFalse( (new Money( 1, $this->buildEurCurrency() ))->isNegative() );
+		self::assertTrue( (new Money( -1, $this->buildEurCurrency() ))->isNegative() );
 	}
 
 	public function testCanBeAllocatedToNumberOfTargets(): void
 	{
-		$a = new Money( 99, 'EUR' );
-		$r = $a->allocateToTargets( 10 );
+		$money     = new Money( 99, $this->buildEurCurrency() );
+		$allocated = iterator_to_array( $money->allocateToTargets( 10 ) );
 
 		self::assertEquals(
 			[
-				new Money( 10, 'EUR' ),
-				new Money( 10, 'EUR' ),
-				new Money( 10, 'EUR' ),
-				new Money( 10, 'EUR' ),
-				new Money( 10, 'EUR' ),
-				new Money( 10, 'EUR' ),
-				new Money( 10, 'EUR' ),
-				new Money( 10, 'EUR' ),
-				new Money( 10, 'EUR' ),
-				new Money( 9, 'EUR' ),
+				new Money( 10, $this->buildEurCurrency() ),
+				new Money( 10, $this->buildEurCurrency() ),
+				new Money( 10, $this->buildEurCurrency() ),
+				new Money( 10, $this->buildEurCurrency() ),
+				new Money( 10, $this->buildEurCurrency() ),
+				new Money( 10, $this->buildEurCurrency() ),
+				new Money( 10, $this->buildEurCurrency() ),
+				new Money( 10, $this->buildEurCurrency() ),
+				new Money( 10, $this->buildEurCurrency() ),
+				new Money( 9, $this->buildEurCurrency() ),
 			],
-			$r
+			$allocated
 		);
 	}
 
 	public function testPercentageCanBeExtracted(): void
 	{
-		$original = new Money( 10000, 'EUR' );
+		$original = new Money( 10000, $this->buildEurCurrency() );
 		$extract  = $original->extractPercentage( 21 );
 
-		self::assertEquals( new Money( 8264, 'EUR' ), $extract->getSubTotal() );
-		self::assertEquals( new Money( 1736, 'EUR' ), $extract->getPercentage() );
+		self::assertEquals( new Money( 1736, $this->buildEurCurrency() ), $extract->getPercentage() );
+		self::assertEquals( new Money( 8264, $this->buildEurCurrency() ), $extract->getSubTotal() );
 	}
 
 	public function testCanBeAllocatedByRatios(): void
 	{
-		$a = new Money( 5, 'EUR' );
-		$r = $a->allocateByRatios( [ 3, 7 ] );
+		$money     = new Money( 5, $this->buildEurCurrency() );
+		$allocated = iterator_to_array( $money->allocateByRatios( [ 3, 7 ] ) );
 
 		self::assertEquals(
 			[
-				new Money( 2, 'EUR' ),
-				new Money( 3, 'EUR' ),
+				new Money( 2, $this->buildEurCurrency() ),
+				new Money( 3, $this->buildEurCurrency() ),
 			],
-			$r
+			$allocated
 		);
 	}
 
-	public function testCanBeComparedToAnotherMoneyObjectWithSameCurrency2(): void
+	public function testGreaterThan(): void
 	{
-		$a = new Money( 1, 'EUR' );
-		$b = new Money( 2, 'EUR' );
+		$lessMoney = new Money( 1, $this->buildEurCurrency() );
+		$moreMoney = new Money( 2, $this->buildEurCurrency() );
 
-		self::assertFalse( $a->greaterThan( $b ) );
-		self::assertTrue( $b->greaterThan( $a ) );
+		self::assertFalse( $lessMoney->greaterThan( $moreMoney ) );
+		self::assertTrue( $moreMoney->greaterThan( $lessMoney ) );
 	}
 
-	public function testCanBeComparedToAnotherMoneyObjectWithSameCurrency3(): void
+	public function testLessThan(): void
 	{
-		$a = new Money( 1, 'EUR' );
-		$b = new Money( 2, 'EUR' );
+		$lessMoney = new Money( 1, $this->buildEurCurrency() );
+		$moreMoney = new Money( 2, $this->buildEurCurrency() );
 
-		self::assertFalse( $b->lessThan( $a ) );
-		self::assertTrue( $a->lessThan( $b ) );
+		self::assertTrue( $lessMoney->lessThan( $moreMoney ) );
+		self::assertFalse( $lessMoney->greaterThan( $moreMoney ) );
 	}
 
-	public function testCanBeComparedToAnotherMoneyObjectWithSameCurrency4(): void
+	public function testEquals(): void
 	{
-		$a = new Money( 1, 'EUR' );
-		$b = new Money( 1, 'EUR' );
+		$money     = new Money( 1, $this->buildEurCurrency() );
+		$sameMoney = new Money( 1, $this->buildEurCurrency() );
 
-		self::assertTrue( $a->equals( $b ) );
-		self::assertTrue( $b->equals( $a ) );
+		self::assertTrue( $money->equals( $sameMoney ) );
+		self::assertTrue( $sameMoney->equals( $money ) );
 	}
 
-	public function testCanBeComparedToAnotherMoneyObjectWithSameCurrency5(): void
+	public function testGreaterThanOrEqual(): void
 	{
-		$a = new Money( 2, 'EUR' );
-		$b = new Money( 2, 'EUR' );
-		$c = new Money( 1, 'EUR' );
+		$money1 = new Money( 2, $this->buildEurCurrency() );
+		$money2 = new Money( 2, $this->buildEurCurrency() );
+		$money3 = new Money( 1, $this->buildEurCurrency() );
 
-		self::assertTrue( $a->greaterThanOrEqual( $a ) );
-		self::assertTrue( $a->greaterThanOrEqual( $b ) );
-		self::assertTrue( $a->greaterThanOrEqual( $c ) );
-		self::assertFalse( $c->greaterThanOrEqual( $a ) );
+		self::assertTrue( $money1->greaterThanOrEqual( $money1 ) );
+		self::assertTrue( $money1->greaterThanOrEqual( $money2 ) );
+		self::assertTrue( $money1->greaterThanOrEqual( $money3 ) );
+		self::assertFalse( $money3->greaterThanOrEqual( $money1 ) );
 	}
 
-	public function testCanBeComparedToAnotherMoneyObjectWithSameCurrency6(): void
+	public function testLessThanOrEqual(): void
 	{
-		$a = new Money( 1, 'EUR' );
-		$b = new Money( 1, 'EUR' );
-		$c = new Money( 2, 'EUR' );
+		$money1 = new Money( 1, $this->buildEurCurrency() );
+		$money2 = new Money( 1, $this->buildEurCurrency() );
+		$money3 = new Money( 2, $this->buildEurCurrency() );
 
-		self::assertTrue( $a->lessThanOrEqual( $a ) );
-		self::assertTrue( $a->lessThanOrEqual( $b ) );
-		self::assertTrue( $a->lessThanOrEqual( $c ) );
-		self::assertFalse( $c->lessThanOrEqual( $a ) );
+		self::assertTrue( $money1->lessThanOrEqual( $money1 ) );
+		self::assertTrue( $money1->lessThanOrEqual( $money2 ) );
+		self::assertTrue( $money1->lessThanOrEqual( $money3 ) );
+		self::assertFalse( $money3->lessThanOrEqual( $money1 ) );
 	}
 
 	public function testHasSameCurrency(): void
 	{
-		self::assertTrue( new Money( 1, 'EUR' )->hasSameCurrency( new Money( 5, 'EUR' ) ) );
-		self::assertFalse( new Money( 1, 'EUR' )->hasSameCurrency( new Money( 1, 'USD' ) ) );
+		self::assertTrue( (new Money( 1, $this->buildEurCurrency() ))->hasSameCurrency( new Money( 5, $this->buildEurCurrency() ) ) );
+		self::assertFalse( (new Money( 1, $this->buildEurCurrency() ))->hasSameCurrency( new Money( 1, $this->buildUsdCurrency() ) ) );
 	}
 
-	public function testExceptionIsRaisedWhenCallingEqualsWithMoneyObjectWithDifferentCurrency(): void
+	public function testIfCurrencyMismatchExceptionIsThrownIfCurrenciesDoesNotMatchUsingEquals(): void
 	{
 		$this->expectException( CurrencyMismatchException::class );
 
-		$a = new Money( 1, 'EUR' );
-		$b = new Money( 2, 'USD' );
+		$eurMoney = new Money( 1, $this->buildEurCurrency() );
+		$usdMoney = new Money( 2, $this->buildUsdCurrency() );
 
-		$a->equals( $b );
+		$eurMoney->equals( $usdMoney );
 	}
 
-	public function testExceptionIsRaisedWhenCallingGreaterThanWithMoneyObjectWithDifferentCurrency(): void
+	public function testIfCurrencyMismatchExceptionIsThrownIfCurrenciesDoesNotMatchUsingGreaterThan(): void
 	{
 		$this->expectException( CurrencyMismatchException::class );
 
-		$a = new Money( 1, 'EUR' );
-		$b = new Money( 2, 'USD' );
+		$eurMoney = new Money( 1, $this->buildEurCurrency() );
+		$usdMoney = new Money( 2, $this->buildUsdCurrency() );
 
-		$a->greaterThan( $b );
+		$eurMoney->greaterThan( $usdMoney );
 	}
 
-	public function testExceptionIsRaisedWhenCallingLessThanWithMoneyObjectWithDifferentCurrency(): void
+	public function testIfCurrencyMismatchExceptionIsThrownIfCurrenciesDoesNotMatchUsingLessThan(): void
 	{
 		$this->expectException( CurrencyMismatchException::class );
 
-		$a = new Money( 1, 'EUR' );
-		$b = new Money( 2, 'USD' );
+		$eurMoney = new Money( 1, $this->buildEurCurrency() );
+		$usdMoney = new Money( 2, $this->buildUsdCurrency() );
 
-		$a->lessThan( $b );
+		$eurMoney->lessThan( $usdMoney );
 	}
 
-	public function testExceptionIsRaisedWhenCallingGreaterThanOrEqualWithMoneyObjectWithDifferentCurrency(): void
+	public function testIfCurrencyMismatchExceptionIsThrownIfCurrenciesDoesNotMatchUsingGreaterThanOrEqual(): void
 	{
 		$this->expectException( CurrencyMismatchException::class );
 
-		$a = new Money( 1, 'EUR' );
-		$b = new Money( 2, 'USD' );
+		$eurMoney = new Money( 1, $this->buildEurCurrency() );
+		$usdMoney = new Money( 2, $this->buildUsdCurrency() );
 
-		$a->greaterThanOrEqual( $b );
+		$eurMoney->greaterThanOrEqual( $usdMoney );
 	}
 
-	public function testExceptionIsRaisedWhenCallingLessThanOrEqualWithMoneyObjectWithDifferentCurrency(): void
+	public function testIfCurrencyMismatchExceptionIsThrownIfCurrenciesDoesNotMatchUsingLessThanOrEqual(): void
 	{
 		$this->expectException( CurrencyMismatchException::class );
 
-		$a = new Money( 1, 'EUR' );
-		$b = new Money( 2, 'USD' );
+		$eurMoney = new Money( 1, $this->buildEurCurrency() );
+		$usdMoney = new Money( 2, $this->buildUsdCurrency() );
 
-		$a->lessThanOrEqual( $b );
+		$eurMoney->lessThanOrEqual( $usdMoney );
 	}
 
 	public function testCanBeSerializedToJson(): void
 	{
 		self::assertEquals(
-			'{"amount":"1","currencyCode":"EUR"}',
-			json_encode( new Money( 1, 'EUR' ), JSON_THROW_ON_ERROR )
+			'{"amount":1,"currencyCode":"EUR"}',
+			json_encode( new Money( 1, $this->buildEurCurrency() ), JSON_THROW_ON_ERROR )
 		);
 	}
 
 	public function testSum(): void
 	{
-		self::assertEquals( new Money( 100, 'EUR' ), Money::sum( new Money( 10, 'EUR' ), new Money( 50, 'EUR' ), new Money( 40, 'EUR' ) ) );
+		self::assertEquals(
+			new Money( 100, $this->buildEurCurrency() ),
+			Money::sum(
+				new Money( 10, $this->buildEurCurrency() ),
+				new Money( 50, $this->buildEurCurrency() ),
+				new Money( 40, $this->buildEurCurrency() )
+			)
+		);
 	}
 
 	public function testMin(): void
 	{
-		self::assertEquals( new Money( 10, 'EUR' ), Money::min( new Money( 10, 'EUR' ), new Money( 50, 'EUR' ), new Money( 40, 'EUR' ) ) );
-		self::assertEquals( new Money( 10, 'EUR' ), Money::min( new Money( 70, 'EUR' ), new Money( 50, 'EUR' ), new Money( 10, 'EUR' ), new Money( 40, 'EUR' ) ) );
+		self::assertEquals(
+			new Money( 10, $this->buildEurCurrency() ),
+			Money::min(
+				new Money( 10, $this->buildEurCurrency() ),
+				new Money( 50, $this->buildEurCurrency() ),
+				new Money( 40, $this->buildEurCurrency() )
+			)
+		);
+		self::assertEquals(
+			new Money( 10, $this->buildEurCurrency() ),
+			Money::min(
+				new Money( 70, $this->buildEurCurrency() ),
+				new Money( 50, $this->buildEurCurrency() ),
+				new Money( 10, $this->buildEurCurrency() ),
+				new Money( 40, $this->buildEurCurrency() )
+			)
+		);
 	}
 
 	public function testMax(): void
 	{
-		self::assertEquals( new Money( 50, 'EUR' ), Money::max( new Money( 10, 'EUR' ), new Money( 50, 'EUR' ), new Money( 40, 'EUR' ) ) );
-		self::assertEquals( new Money( 70, 'EUR' ), Money::max( new Money( 70, 'EUR' ), new Money( 50, 'EUR' ), new Money( 10, 'EUR' ), new Money( 40, 'EUR' ) ) );
+		self::assertEquals(
+			new Money( 50, $this->buildEurCurrency() ),
+			Money::max(
+				new Money( 10, $this->buildEurCurrency() ),
+				new Money( 50, $this->buildEurCurrency() ),
+				new Money( 40, $this->buildEurCurrency() )
+			)
+		);
+		self::assertEquals(
+			new Money( 70, $this->buildEurCurrency() ),
+			Money::max(
+				new Money( 70, $this->buildEurCurrency() ),
+				new Money( 50, $this->buildEurCurrency() ),
+				new Money( 10, $this->buildEurCurrency() ),
+				new Money( 40, $this->buildEurCurrency() )
+			)
+		);
 	}
 
 	public function testAvg(): void
 	{
-		self::assertEquals( new Money( 250, 'EUR' ), Money::avg( new Money( 200, 'EUR' ), new Money( 200, 'EUR' ), new Money( 100, 'EUR' ), new Money( 500, 'EUR' ) ) );
+		self::assertEquals(
+			new Money( 250, $this->buildEurCurrency() ),
+			Money::avg(
+				new Money( 200, $this->buildEurCurrency() ),
+				new Money( 200, $this->buildEurCurrency() ),
+				new Money( 100, $this->buildEurCurrency() ),
+				new Money( 500, $this->buildEurCurrency() )
+			)
+		);
+	}
+
+	private function buildEurCurrency(): RepresentsCurrency
+	{
+		return new Currency( 'EUR', '€', 100 );
+	}
+
+	private function buildUsdCurrency(): RepresentsCurrency
+	{
+		return new Currency( 'USD', '$', 100 );
 	}
 }

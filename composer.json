@@ -1,7 +1,7 @@
 {
 	"name": "compono-kit/money",
-	"description": "Wrapper with interfaces for moneyphp/money",
-	"homepage": "https://github.com/hansel23/money",
+	"description": "Implementation for compomo-kit/money-interfaces",
+	"homepage": "https://github.com/compono-kit/money",
 	"minimum-stability": "dev",
 	"prefer-stable": true,
 	"license": "proprietary",
@@ -12,21 +12,13 @@
 		}
 	],
 	"require": {
-		"php": ">=8.4",
+		"php": ">=8.0",
 		"ext-json": "*",
-		"ext-bcmath": "*",
-		"ext-intl": "*",
-		"moneyphp/money": "^4.0.0"
+		"compono-kit/money-interfaces": "1.0.0"
 	},
 	"require-dev": {
 		"roave/security-advisories": "dev-latest",
-		"hansel23/tooly-composer-script": "^2.0.0"
-	},
-	"repositories": {
-		"hansel23/tooly-composer-script": {
-			"type": "vcs",
-			"url": "git@github.com:Hansel23/tooly-composer-script.git"
-		}
+		"phpunit/phpunit": "^9.0.0"
 	},
 	"autoload": {
 		"psr-4": {
@@ -35,20 +27,7 @@
 	},
 	"autoload-dev": {
 		"psr-4": {
-			"ComponoKit\\Money\\Tests\\Unit\\": "tests/Unit"
-		}
-	},
-	"scripts": {
-		"post-install-cmd": "Hansel23\\Tooly\\ScriptHandler::installPharTools",
-		"post-update-cmd": "Hansel23\\Tooly\\ScriptHandler::installPharTools"
-	},
-	"extra": {
-		"tools": {
-			"phpunit": {
-				"url": "https://phar.phpunit.de/phpunit-11.phar",
-				"only-dev": true
-			}
+			"ComponoKit\\Money\\Tests\\": "tests/"
 		}
 	}
 }
-

@@ -2,8 +2,7 @@
 <phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/11.0/phpunit.xsd"
          bootstrap="../tests/bootstrap.php"
          beStrictAboutOutputDuringTests="true"
-         colors="true"
-         cacheDirectory=".phpunit.cache">
+         colors="true">
 	<testsuites>
 		<testsuite name="Unit">
 			<directory>../tests/Unit</directory>
@@ -12,9 +11,4 @@
 	<logging>
 		<testdoxText outputFile="php://stdout"/>
 	</logging>
-	<source>
-		<include>
-			<directory>../src</directory>
-		</include>
-	</source>
 </phpunit>

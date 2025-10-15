@@ -2,7 +2,7 @@
 
 namespace ComponoKit\Money\Exceptions;
 
-class CurrencyMismatchException extends \LogicException
+class CurrencyMismatchException extends \LogicException implements RepresentsMoneyException
 {
 
 }
