@@ -4,7 +4,7 @@ namespace ComponoKit\Money\Helpers;
 
 use ComponoKit\Money\Exceptions\InvalidRatioException;
 
-final class RatioCalculator
+final class AmountAllocator
 {
 	private function __construct()
 	{

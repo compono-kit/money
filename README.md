@@ -9,6 +9,9 @@ Implementation for compomo-kit/money-interfaces
 * [Allocation](#allocation)
 * [Value added tax calculation](#value-added-tax-calculation)
 * [Json](#json)
+* [Exceptions](#exceptions)
+* [MoneyAggregator](#moneyaggregator)
+* [AmountAllocator](#amountallocator)
 
 ## Basics
 
@@ -50,26 +53,17 @@ Implementation for compomo-kit/money-interfaces
 (new Money( 0, 'EUR' ))->isZero(); //true
 ````
 
-## Aggregation
-
-````PHP
-Money::sum( new Money( 1000, 'EUR' ), new Money( 2000, 'EUR' ), new Money( 4000, 'EUR' ) )->getAmount(); //7000
-Money::avg( new Money( 5000, 'EUR' ), new Money( 2000, 'EUR' ), new Money( 8000, 'EUR' ) )->getAmount(); //3000
-Money::min( new Money( 1000, 'EUR' ), new Money( 2000, 'EUR' ), new Money( 4000, 'EUR' ) )->getAmount(); //1000
-Money::max( new Money( 1000, 'EUR' ), new Money( 2000, 'EUR' ), new Money( 4000, 'EUR' ) )->getAmount(); //4000
-````
-
 ## Allocation
 
 ````PHP
-$allocatedMoney = (new Money( 99, 'EUR' ))->allocateToTargets( 5 );
+$allocatedMoney = iterator_to_array((new Money( 99, 'EUR' ))->allocateToTargets( 5 ));
 $allocatedMoney[0]->getAmount(); //20
 $allocatedMoney[1]->getAmount(); //20
 $allocatedMoney[2]->getAmount(); //20
 $allocatedMoney[3]->getAmount(); //20
 $allocatedMoney[4]->getAmount(); //19
 
-$allocatedMoney = (new Money( 5000, 'EUR' ))->allocateByRatios( [ 70, 30 ] );
+$allocatedMoney = iterator_to_array((new Money( 5000, 'EUR' ))->allocateByRatios( [ 70, 30 ] ));
 printf( "70%% of 5000 = %d", $allocatedMoney[0]->getAmount() ); //70% of 5000 = 3500
 printf( "30%% of 5000 = %d", $allocatedMoney[1]->getAmount() ); //30% of 5000 = 1500
 ````
@@ -92,4 +86,48 @@ $extractedPercentage->getPercentage(); //Mwst.-Betrag
 
 ````PHP
 json_encode( (new Money( 5000, 'EUR' )) ); //{ "amount": "5000", "currency": "EUR" }
+````
+
+## Exceptions
+
+To handle all possible exceptions in a unified way, the `RepresentsMoneyException` interface can be used.
+
+Specific exceptions from `Money` are:
+
+* `CurrencyMismatchExceptions`
+* `InvalidCurrencyException`
+* `InvalidRoundingModeException`
+
+Specific exceptions from `MoneyAggregator` are:
+
+* `CurrencyMismatchExceptions`
+
+Specific exceptions from `RatioCalculator` are:
+
+* `InvalidRatioException`
+
+## Helpers
+
+### MoneyAggregator
+
+````PHP
+MoneyAggregator::sum( new Money( 1000, 'EUR' ), new Money( 2000, 'EUR' ), new Money( 4000, 'EUR' ) )->getAmount(); //7000
+MoneyAggregator::avg( new Money( 5000, 'EUR' ), new Money( 2000, 'EUR' ), new Money( 8000, 'EUR' ) )->getAmount(); //3000
+MoneyAggregator::min( new Money( 1000, 'EUR' ), new Money( 2000, 'EUR' ), new Money( 4000, 'EUR' ) )->getAmount(); //1000
+MoneyAggregator::max( new Money( 1000, 'EUR' ), new Money( 2000, 'EUR' ), new Money( 4000, 'EUR' ) )->getAmount(); //4000
+````
+
+### AmountAllocator
+
+````PHP
+$allocatedAmount = AmountAllocator::allocateToTargets( 99, 5 );
+$allocatedAmount[0]; //20
+$allocatedAmount[1]; //20
+$allocatedAmount[2]; //20
+$allocatedAmount[3]; //20
+$allocatedAmount[4]; //19
+
+$allocatedAmount = AmountAllocator::allocateByRatios( 5000, [ 70, 30 ] );
+printf( "70%% of 5000 = %d", $allocatedAmount[0] ); //70% of 5000 = 3500
+printf( "30%% of 5000 = %d", $allocatedAmount[1] ); //30% of 5000 = 1500
 ````

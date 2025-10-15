@@ -2,16 +2,18 @@
 
 namespace ComponoKit\Money;
 
-use ComponoKit\Money\Exceptions\CurrencyMismatchException;
 use ComponoKit\Money\Exceptions\InvalidRatioException;
 use ComponoKit\Money\Exceptions\InvalidRoundingModeException;
-use ComponoKit\Money\Helpers\RatioCalculator;
+use ComponoKit\Money\Helpers\AmountAllocator;
 use ComponoKit\Money\Interfaces\RepresentExtractedPercentage;
 use ComponoKit\Money\Interfaces\RepresentsCurrency;
 use ComponoKit\Money\Interfaces\RepresentsMoney;
+use ComponoKit\Money\Traits\AssertingCurrencies;
 
 class Money implements RepresentsMoney
 {
+	use AssertingCurrencies;
+
 	/** @var int[] */
 	private static array $roundingModes = [
 		PHP_ROUND_HALF_UP   => 1,
@@ -24,63 +26,6 @@ class Money implements RepresentsMoney
 	{
 	}
 
-	public static function fromFloat( float $amount, RepresentsCurrency $currency, int $roundingMode = PHP_ROUND_HALF_UP ): static
-	{
-		return new static( (int)round( $amount * $currency->getMinorUnitFactor(), 0, $roundingMode ), $currency );
-	}
-
-	public function getCurrency(): RepresentsCurrency
-	{
-		return $this->currency;
-	}
-
-	public static function min( RepresentsMoney $firstMoney, RepresentsMoney ...$moneyCollection ): RepresentsMoney
-	{
-		$min = $firstMoney;
-
-		foreach ( $moneyCollection as $money )
-		{
-			if ( $money->lessThan( $min ) )
-			{
-				$min = $money;
-			}
-		}
-
-		return $min;
-	}
-
-	public static function max( RepresentsMoney $firstMoney, RepresentsMoney ...$moneyCollection ): RepresentsMoney
-	{
-		$max = $firstMoney;
-
-		foreach ( $moneyCollection as $money )
-		{
-			if ( $money->greaterThan( $max ) )
-			{
-				$max = $money;
-			}
-		}
-
-		return $max;
-	}
-
-	public static function avg( RepresentsMoney $firstMoney, RepresentsMoney ...$moneyCollection ): RepresentsMoney
-	{
-		return self::sum( $firstMoney, ...$moneyCollection )->divide( (float)(count( $moneyCollection ) + 1) );
-	}
-
-	public static function sum( RepresentsMoney $firstMoney, RepresentsMoney ...$moneyCollection ): RepresentsMoney
-	{
-		$summedMoney = $firstMoney;
-
-		foreach ( $moneyCollection as $money )
-		{
-			$summedMoney = $summedMoney->add( $money );
-		}
-
-		return $summedMoney;
-	}
-
 	public function getAmount(): int
 	{
 		return $this->amount;
@@ -91,16 +36,28 @@ class Money implements RepresentsMoney
 		return $this->getCurrency()->getIsoCode();
 	}
 
+	public static function fromFloat( float $amount, RepresentsCurrency $currency, int $roundingMode = PHP_ROUND_HALF_UP ): static
+	{
+		return new static( (int)round( $amount * $currency->getMinorUnitFactor(), 0, $roundingMode ), $currency );
+	}
+
+	public function getCurrency(): RepresentsCurrency
+	{
+		return $this->currency;
+	}
+
+
+
 	public function add( RepresentsMoney $other ): RepresentsMoney
 	{
-		$this->assertSameCurrency( $other );
+		self::assertSameCurrency( $this, $other );
 
 		return new static( $this->getAmount() + $other->getAmount(), $this->getCurrency() );
 	}
 
 	public function subtract( RepresentsMoney $other ): RepresentsMoney
 	{
-		$this->assertSameCurrency( $other );
+		self::assertSameCurrency( $this, $other );
 
 		return new static( $this->getAmount() - $other->getAmount(), $this->getCurrency() );
 	}
@@ -121,6 +78,8 @@ class Money implements RepresentsMoney
 
 	public function mod( RepresentsMoney $money ): RepresentsMoney
 	{
+		self::assertSameCurrency( $this, $money );
+		
 		return new static( $this->getAmount() % $money->getAmount(), $this->getCurrency() );
 	}
 
@@ -136,9 +95,11 @@ class Money implements RepresentsMoney
 
 	public function ratioOf( RepresentsMoney $money ): float
 	{
+		self::assertSameCurrency( $this, $money );
+		
 		if ( $money->isZero() )
 		{
-			throw new InvalidRatioException( "Ration can't be 0" );
+			throw new InvalidRatioException( "Ratio can't be 0" );
 		}
 
 		return $this->getAmount() / $money->getAmount();
@@ -166,7 +127,7 @@ class Money implements RepresentsMoney
 	 */
 	public function allocateToTargets( int $numberOfTargets ): \Iterator
 	{
-		foreach ( RatioCalculator::allocateToTargets( $this->getAmount(), $numberOfTargets ) as $share )
+		foreach ( AmountAllocator::allocateToTargets( $this->getAmount(), $numberOfTargets ) as $share )
 		{
 			yield new static( $share, $this->getCurrency() );
 		}
@@ -179,7 +140,7 @@ class Money implements RepresentsMoney
 	 */
 	public function allocateByRatios( array $ratios ): \Iterator
 	{
-		foreach ( RatioCalculator::allocateByRatios( $this->getAmount(), $ratios ) as $share )
+		foreach ( AmountAllocator::allocateByRatios( $this->getAmount(), $ratios ) as $share )
 		{
 			yield new static( $share, $this->getCurrency() );
 		}
@@ -199,36 +160,32 @@ class Money implements RepresentsMoney
 
 	public function equals( RepresentsMoney $other ): bool
 	{
-		$this->assertSameCurrency( $other );
+		self::assertSameCurrency( $this, $other );
 
 		return $this->compareTo( $other ) === 0;
 	}
 
 	public function greaterThan( RepresentsMoney $other ): bool
 	{
-		$this->assertSameCurrency( $other );
+		self::assertSameCurrency( $this, $other );
 
 		return $this->compareTo( $other ) === 1;
 	}
 
 	public function greaterThanOrEqual( RepresentsMoney $other ): bool
 	{
-		$this->assertSameCurrency( $other );
-
 		return $this->greaterThan( $other ) || $this->equals( $other );
 	}
 
 	public function lessThan( RepresentsMoney $other ): bool
 	{
-		$this->assertSameCurrency( $other );
+		self::assertSameCurrency( $this, $other );
 
 		return $this->compareTo( $other ) === -1;
 	}
 
 	public function lessThanOrEqual( RepresentsMoney $other ): bool
 	{
-		$this->assertSameCurrency( $other );
-
 		return $this->lessThan( $other ) || $this->equals( $other );
 	}
 
@@ -243,14 +200,6 @@ class Money implements RepresentsMoney
 			'amount'       => $this->getAmount(),
 			'currencyCode' => $this->getCurrency()->getIsoCode(),
 		];
-	}
-
-	private function assertSameCurrency( RepresentsMoney $money ): void
-	{
-		if ( !$this->hasSameCurrency( $money ) )
-		{
-			throw new CurrencyMismatchException( sprintf( 'Currency mismatch: %s != %s', $this->getCurrencyCode(), $money->getCurrencyCode() ) );
-		}
 	}
 
 	private function compareTo( RepresentsMoney $other ): int

@@ -2,14 +2,15 @@
 
 namespace ComponoKit\Money\Tests\Unit;
 
-use ComponoKit\Money\Currency;
 use ComponoKit\Money\Exceptions\CurrencyMismatchException;
-use ComponoKit\Money\Interfaces\RepresentsCurrency;
+use ComponoKit\Money\Exceptions\InvalidRoundingModeException;
 use ComponoKit\Money\Money;
+use ComponoKit\Money\Tests\Unit\Traits\BuildingCurrencies;
 use PHPUnit\Framework\TestCase;
 
 class MoneyTest extends TestCase
 {
+	use BuildingCurrencies;
 
 	public function testObjectCanBeConstructed(): void
 	{
@@ -28,87 +29,87 @@ class MoneyTest extends TestCase
 
 	public function testAnotherMoneyObjectWithSameCurrencyCanBeAdded(): void
 	{
-		$a = new Money( 1, $this->buildEurCurrency() );
-		$b = new Money( 2, $this->buildEurCurrency() );
-		$c = $a->add( $b );
+		$money1 = new Money( 1, $this->buildEurCurrency() );
+		$money2 = new Money( 2, $this->buildEurCurrency() );
+		$money3 = $money1->add( $money2 );
 
-		self::assertEquals( 1, $a->getAmount() );
-		self::assertEquals( 2, $b->getAmount() );
-		self::assertEquals( 3, $c->getAmount() );
+		self::assertEquals( 1, $money1->getAmount() );
+		self::assertEquals( 2, $money2->getAmount() );
+		self::assertEquals( 3, $money3->getAmount() );
 	}
 
 	public function testExceptionIsRaisedWhenMoneyObjectWithDifferentCurrencyIsAdded(): void
 	{
 		$this->expectException( CurrencyMismatchException::class );
 
-		$a = new Money( 1, $this->buildEurCurrency() );
-		$b = new Money( 2, $this->buildUsdCurrency() );
+		$money1 = new Money( 1, $this->buildEurCurrency() );
+		$money2 = new Money( 2, $this->buildUsdCurrency() );
 
-		$a->add( $b );
+		$money1->add( $money2 );
 	}
 
 	public function testAnotherMoneyObjectWithSameCurrencyCanBeSubtracted(): void
 	{
-		$a = new Money( 1, $this->buildEurCurrency() );
-		$b = new Money( 2, $this->buildEurCurrency() );
-		$c = $b->subtract( $a );
+		$money1 = new Money( 1, $this->buildEurCurrency() );
+		$money2 = new Money( 2, $this->buildEurCurrency() );
+		$money3 = $money2->subtract( $money1 );
 
-		self::assertEquals( 1, $a->getAmount() );
-		self::assertEquals( 2, $b->getAmount() );
-		self::assertEquals( 1, $c->getAmount() );
+		self::assertEquals( 1, $money1->getAmount() );
+		self::assertEquals( 2, $money2->getAmount() );
+		self::assertEquals( 1, $money3->getAmount() );
 	}
 
 	public function testExceptionIsRaisedWhenMoneyObjectWithDifferentCurrencyIsSubtracted(): void
 	{
 		$this->expectException( CurrencyMismatchException::class );
 
-		$a = new Money( 1, $this->buildEurCurrency() );
-		$b = new Money( 2, $this->buildUsdCurrency() );
+		$money1 = new Money( 1, $this->buildEurCurrency() );
+		$money2 = new Money( 2, $this->buildUsdCurrency() );
 
-		$b->subtract( $a );
+		$money2->subtract( $money1 );
 	}
 
 	public function testCanBeNegated(): void
 	{
-		$a = new Money( 1, $this->buildEurCurrency() );
-		$b = $a->negate();
+		$money1 = new Money( 1, $this->buildEurCurrency() );
+		$money2 = $money1->negate();
 
-		self::assertEquals( 1, $a->getAmount() );
-		self::assertEquals( -1, $b->getAmount() );
+		self::assertEquals( 1, $money1->getAmount() );
+		self::assertEquals( -1, $money2->getAmount() );
 	}
 
 	public function testCanBeMultipliedByAFactor(): void
 	{
-		$a = new Money( 1, $this->buildEurCurrency() );
-		$b = $a->multiply( 2 );
+		$money1 = new Money( 1, $this->buildEurCurrency() );
+		$money2 = $money1->multiply( 2 );
 
-		self::assertEquals( 1, $a->getAmount() );
-		self::assertEquals( 2, $b->getAmount() );
+		self::assertEquals( 1, $money1->getAmount() );
+		self::assertEquals( 2, $money2->getAmount() );
 	}
 
 	public function testExceptionIsRaisedWhenMultipliedUsingInvalidRoundingMode(): void
 	{
-		$this->expectException( \DomainException::class );
+		$this->expectException( InvalidRoundingModeException::class );
 
-		$a = new Money( 1, $this->buildEurCurrency() );
-		$a->multiply( 2, 0 );
+		$money = new Money( 1, $this->buildEurCurrency() );
+		$money->multiply( 2, 0 );
 	}
 
 	public function testCanBeDividedByAFactor(): void
 	{
-		$a = new Money( 6, $this->buildEurCurrency() );
-		$b = $a->divide( 2 );
+		$money1 = new Money( 6, $this->buildEurCurrency() );
+		$money2 = $money1->divide( 2 );
 
-		self::assertEquals( 6, $a->getAmount() );
-		self::assertEquals( 3, $b->getAmount() );
+		self::assertEquals( 6, $money1->getAmount() );
+		self::assertEquals( 3, $money2->getAmount() );
 	}
 
 	public function testExceptionIsRaisedWhenDividedUsingInvalidRoundingMode(): void
 	{
-		$this->expectException( \DomainException::class );
+		$this->expectException( InvalidRoundingModeException::class );
 
-		$a = new Money( 6, $this->buildEurCurrency() );
-		$a->divide( 2, 0 );
+		$money = new Money( 6, $this->buildEurCurrency() );
+		$money->divide( 2, 0 );
 	}
 
 	public function testModulo(): void
@@ -313,82 +314,5 @@ class MoneyTest extends TestCase
 			'{"amount":1,"currencyCode":"EUR"}',
 			json_encode( new Money( 1, $this->buildEurCurrency() ), JSON_THROW_ON_ERROR )
 		);
-	}
-
-	public function testSum(): void
-	{
-		self::assertEquals(
-			new Money( 100, $this->buildEurCurrency() ),
-			Money::sum(
-				new Money( 10, $this->buildEurCurrency() ),
-				new Money( 50, $this->buildEurCurrency() ),
-				new Money( 40, $this->buildEurCurrency() )
-			)
-		);
-	}
-
-	public function testMin(): void
-	{
-		self::assertEquals(
-			new Money( 10, $this->buildEurCurrency() ),
-			Money::min(
-				new Money( 10, $this->buildEurCurrency() ),
-				new Money( 50, $this->buildEurCurrency() ),
-				new Money( 40, $this->buildEurCurrency() )
-			)
-		);
-		self::assertEquals(
-			new Money( 10, $this->buildEurCurrency() ),
-			Money::min(
-				new Money( 70, $this->buildEurCurrency() ),
-				new Money( 50, $this->buildEurCurrency() ),
-				new Money( 10, $this->buildEurCurrency() ),
-				new Money( 40, $this->buildEurCurrency() )
-			)
-		);
-	}
-
-	public function testMax(): void
-	{
-		self::assertEquals(
-			new Money( 50, $this->buildEurCurrency() ),
-			Money::max(
-				new Money( 10, $this->buildEurCurrency() ),
-				new Money( 50, $this->buildEurCurrency() ),
-				new Money( 40, $this->buildEurCurrency() )
-			)
-		);
-		self::assertEquals(
-			new Money( 70, $this->buildEurCurrency() ),
-			Money::max(
-				new Money( 70, $this->buildEurCurrency() ),
-				new Money( 50, $this->buildEurCurrency() ),
-				new Money( 10, $this->buildEurCurrency() ),
-				new Money( 40, $this->buildEurCurrency() )
-			)
-		);
-	}
-
-	public function testAvg(): void
-	{
-		self::assertEquals(
-			new Money( 250, $this->buildEurCurrency() ),
-			Money::avg(
-				new Money( 200, $this->buildEurCurrency() ),
-				new Money( 200, $this->buildEurCurrency() ),
-				new Money( 100, $this->buildEurCurrency() ),
-				new Money( 500, $this->buildEurCurrency() )
-			)
-		);
-	}
-
-	private function buildEurCurrency(): RepresentsCurrency
-	{
-		return new Currency( 'EUR', '€', 100 );
-	}
-
-	private function buildUsdCurrency(): RepresentsCurrency
-	{
-		return new Currency( 'USD', '$', 100 );
 	}
 }
