@@ -2,7 +2,7 @@
 
 namespace ComponoKit\Money\Tests\Unit;
 
-use ComponoKit\Money\Helpers\MoneyAggregator;
+use ComponoKit\Money\Utilities\MoneyAggregator;
 use ComponoKit\Money\Money;
 use ComponoKit\Money\Tests\Unit\Traits\BuildingCurrencies;
 use PHPUnit\Framework\TestCase;

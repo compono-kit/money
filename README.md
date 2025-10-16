@@ -11,7 +11,6 @@ Implementation for compomo-kit/money-interfaces
 * [Json](#json)
 * [Exceptions](#exceptions)
 * [MoneyAggregator](#moneyaggregator)
-* [AmountAllocator](#amountallocator)
 
 ## Basics
 
@@ -115,19 +114,4 @@ MoneyAggregator::sum( new Money( 1000, 'EUR' ), new Money( 2000, 'EUR' ), new Mo
 MoneyAggregator::avg( new Money( 5000, 'EUR' ), new Money( 2000, 'EUR' ), new Money( 8000, 'EUR' ) )->getAmount(); //3000
 MoneyAggregator::min( new Money( 1000, 'EUR' ), new Money( 2000, 'EUR' ), new Money( 4000, 'EUR' ) )->getAmount(); //1000
 MoneyAggregator::max( new Money( 1000, 'EUR' ), new Money( 2000, 'EUR' ), new Money( 4000, 'EUR' ) )->getAmount(); //4000
-````
-
-### AmountAllocator
-
-````PHP
-$allocatedAmount = AmountAllocator::allocateToTargets( 99, 5 );
-$allocatedAmount[0]; //20
-$allocatedAmount[1]; //20
-$allocatedAmount[2]; //20
-$allocatedAmount[3]; //20
-$allocatedAmount[4]; //19
-
-$allocatedAmount = AmountAllocator::allocateByRatios( 5000, [ 70, 30 ] );
-printf( "70%% of 5000 = %d", $allocatedAmount[0] ); //70% of 5000 = 3500
-printf( "30%% of 5000 = %d", $allocatedAmount[1] ); //30% of 5000 = 1500
 ````

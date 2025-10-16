@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace ComponoKit\Money\Helpers;
+namespace ComponoKit\Money\Utilities;
 
 use ComponoKit\Money\Interfaces\RepresentsMoney;
 use ComponoKit\Money\Traits\AssertingCurrencies;

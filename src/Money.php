@@ -4,7 +4,6 @@ namespace ComponoKit\Money;
 
 use ComponoKit\Money\Exceptions\InvalidRatioException;
 use ComponoKit\Money\Exceptions\InvalidRoundingModeException;
-use ComponoKit\Money\Helpers\AmountAllocator;
 use ComponoKit\Money\Interfaces\RepresentExtractedPercentage;
 use ComponoKit\Money\Interfaces\RepresentsCurrency;
 use ComponoKit\Money\Interfaces\RepresentsMoney;
@@ -46,8 +45,6 @@ class Money implements RepresentsMoney
 		return $this->currency;
 	}
 
-
-
 	public function add( RepresentsMoney $other ): RepresentsMoney
 	{
 		self::assertSameCurrency( $this, $other );
@@ -79,7 +76,7 @@ class Money implements RepresentsMoney
 	public function mod( RepresentsMoney $money ): RepresentsMoney
 	{
 		self::assertSameCurrency( $this, $money );
-		
+
 		return new static( $this->getAmount() % $money->getAmount(), $this->getCurrency() );
 	}
 
@@ -96,7 +93,7 @@ class Money implements RepresentsMoney
 	public function ratioOf( RepresentsMoney $money ): float
 	{
 		self::assertSameCurrency( $this, $money );
-		
+
 		if ( $money->isZero() )
 		{
 			throw new InvalidRatioException( "Ratio can't be 0" );
@@ -127,7 +124,7 @@ class Money implements RepresentsMoney
 	 */
 	public function allocateToTargets( int $numberOfTargets ): \Iterator
 	{
-		foreach ( AmountAllocator::allocateToTargets( $this->getAmount(), $numberOfTargets ) as $share )
+		foreach ( $this->allocateAmountByRatios( $this->getAmount(), array_fill( 0, $numberOfTargets, 1 ) ) as $share )
 		{
 			yield new static( $share, $this->getCurrency() );
 		}
@@ -140,7 +137,7 @@ class Money implements RepresentsMoney
 	 */
 	public function allocateByRatios( array $ratios ): \Iterator
 	{
-		foreach ( AmountAllocator::allocateByRatios( $this->getAmount(), $ratios ) as $share )
+		foreach ( $this->allocateAmountByRatios( $this->getAmount(), $ratios ) as $share )
 		{
 			yield new static( $share, $this->getCurrency() );
 		}
@@ -200,6 +197,70 @@ class Money implements RepresentsMoney
 			'amount'       => $this->getAmount(),
 			'currencyCode' => $this->getCurrency()->getIsoCode(),
 		];
+	}
+
+	private function allocateAmountByRatios( int $amount, array $ratios ): array
+	{
+		$totalRatio = array_sum( $ratios );
+
+		if ( $totalRatio <= 0 )
+		{
+			throw new InvalidRatioException( 'Total ratio must be greater than 0' );
+		}
+
+		$remaining = $amount;
+		$shares    = [];
+
+		foreach ( $ratios as $key => $ratio )
+		{
+			if ( $ratio < 0 )
+			{
+				throw new InvalidRatioException( 'Ratio must be equal or greater than 0' );
+			}
+
+			$share          = (int)floor( $amount * $ratio / $totalRatio );
+			$shares[ $key ] = $share;
+			$remaining      -= $share;
+		}
+
+		$fractions = $this->calculateFractions( $ratios, $amount, $totalRatio );
+
+		return $this->distributeRemainder( $remaining, $fractions, $shares );
+	}
+
+	private function calculateFractions( array $ratios, int $amount, int $totalRatio ): array
+	{
+		$fractions = [];
+		foreach ( $ratios as $key => $ratio )
+		{
+			$share             = ($amount * $ratio / $totalRatio);
+			$fractions[ $key ] = $share - floor( $share );
+		}
+
+		return $fractions;
+	}
+
+	private function distributeRemainder( int $remaining, array $fractions, array $shares ): array
+	{
+		while ( $remaining > 0 )
+		{
+			$index = self::getIndexOfMaxFraction( $fractions, $shares );
+			$shares[ $index ]++;
+			$remaining--;
+			unset( $fractions[ $index ] );
+		}
+
+		return $shares;
+	}
+
+	private function getIndexOfMaxFraction( array $fractions, array $shares ): int
+	{
+		if ( !$fractions )
+		{
+			return array_key_first( $shares );
+		}
+
+		return array_keys( $fractions, max( $fractions ) )[0];
 	}
 
 	private function compareTo( RepresentsMoney $other ): int
