@@ -49,45 +49,45 @@ class Money implements RepresentsMoney
 	{
 		self::assertSameCurrency( $this, $other );
 
-		return new static( $this->getAmount() + $other->getAmount(), $this->getCurrency() );
+		return new static( $this->amount + $other->getAmount(), $this->getCurrency() );
 	}
 
 	public function subtract( RepresentsMoney $other ): RepresentsMoney
 	{
 		self::assertSameCurrency( $this, $other );
 
-		return new static( $this->getAmount() - $other->getAmount(), $this->getCurrency() );
+		return new static( $this->amount - $other->getAmount(), $this->getCurrency() );
 	}
 
 	public function multiply( float $factor, int $roundingMode = PHP_ROUND_HALF_UP ): RepresentsMoney
 	{
 		$this->guardRoundingModeIsValid( $roundingMode );
 
-		return new static( (int)round( $this->getAmount() * $factor, 0, $roundingMode ), $this->getCurrency() );
+		return new static( (int)round( $this->amount * $factor, 0, $roundingMode ), $this->getCurrency() );
 	}
 
 	public function divide( float $divisor, int $roundingMode = PHP_ROUND_HALF_UP ): RepresentsMoney
 	{
 		$this->guardRoundingModeIsValid( $roundingMode );
 
-		return new static( (int)round( $this->getAmount() / $divisor, 0, $roundingMode ), $this->getCurrency() );
+		return new static( (int)round( $this->amount / $divisor, 0, $roundingMode ), $this->getCurrency() );
 	}
 
 	public function mod( RepresentsMoney $money ): RepresentsMoney
 	{
 		self::assertSameCurrency( $this, $money );
 
-		return new static( $this->getAmount() % $money->getAmount(), $this->getCurrency() );
+		return new static( $this->amount % $money->getAmount(), $this->getCurrency() );
 	}
 
 	public function absolute(): RepresentsMoney
 	{
-		return new static( (int)round( abs( $this->getAmount() ) ), $this->getCurrency() );
+		return new static( (int)round( abs( $this->amount ) ), $this->getCurrency() );
 	}
 
 	public function negate(): RepresentsMoney
 	{
-		return new static( -1 * $this->getAmount(), $this->getCurrency() );
+		return new static( -1 * $this->amount, $this->getCurrency() );
 	}
 
 	public function ratioOf( RepresentsMoney $money ): float
@@ -99,22 +99,22 @@ class Money implements RepresentsMoney
 			throw new InvalidRatioException( "Ratio can't be 0" );
 		}
 
-		return $this->getAmount() / $money->getAmount();
+		return $this->amount / $money->getAmount();
 	}
 
 	public function isZero(): bool
 	{
-		return $this->getAmount() === 0;
+		return $this->amount === 0;
 	}
 
 	public function isPositive(): bool
 	{
-		return $this->getAmount() > 0;
+		return $this->amount > 0;
 	}
 
 	public function isNegative(): bool
 	{
-		return $this->getAmount() < 0;
+		return $this->amount < 0;
 	}
 
 	/**
@@ -124,7 +124,7 @@ class Money implements RepresentsMoney
 	 */
 	public function allocateToTargets( int $numberOfTargets ): \Iterator
 	{
-		foreach ( $this->allocateAmountByRatios( $this->getAmount(), array_fill( 0, $numberOfTargets, 1 ) ) as $share )
+		foreach ( $this->allocateAmountByRatios( $this->amount, array_fill( 0, $numberOfTargets, 1 ) ) as $share )
 		{
 			yield new static( $share, $this->getCurrency() );
 		}
@@ -137,7 +137,7 @@ class Money implements RepresentsMoney
 	 */
 	public function allocateByRatios( array $ratios ): \Iterator
 	{
-		foreach ( $this->allocateAmountByRatios( $this->getAmount(), $ratios ) as $share )
+		foreach ( $this->allocateAmountByRatios( $this->amount, $ratios ) as $share )
 		{
 			yield new static( $share, $this->getCurrency() );
 		}
@@ -148,7 +148,7 @@ class Money implements RepresentsMoney
 		$this->guardRoundingModeIsValid( $roundingMode );
 
 		$percentageAmount = new self(
-			(int)round( $this->getAmount() / (100 + $percentage) * $percentage, 0, $roundingMode ),
+			(int)round( $this->amount / (100 + $percentage) * $percentage, 0, $roundingMode ),
 			$this->getCurrency()
 		);
 
@@ -194,8 +194,13 @@ class Money implements RepresentsMoney
 	public function jsonSerialize(): array
 	{
 		return [
-			'amount'       => $this->getAmount(),
-			'currencyCode' => $this->getCurrency()->getIsoCode(),
+			'amount'   => $this->amount,
+			'currency' => [
+				'iso-code'          => $this->currency->getIsoCode(),
+				'symbol'            => $this->currency->getSymbol(),
+				'minor-unit-factor' => $this->currency->getMinorUnitFactor(),
+				'minor-unit'        => $this->currency->getMinorUnit(),
+			],
 		];
 	}
 
@@ -265,7 +270,7 @@ class Money implements RepresentsMoney
 
 	private function compareTo( RepresentsMoney $other ): int
 	{
-		return $this->getAmount() <=> $other->getAmount();
+		return $this->amount <=> $other->getAmount();
 	}
 
 	private function guardRoundingModeIsValid( int $roundingMode ): void

@@ -9,6 +9,8 @@ class Currency implements RepresentsCurrency
 {
 	private string $isoCode;
 
+	private int    $minorUnit;
+
 	public function __construct( string $isoCode, private string $symbol, private int $minorUnitFactor )
 	{
 		if ( !preg_match( '/^[A-Z]{3}$/', strtoupper( $isoCode ) ) )
@@ -21,7 +23,8 @@ class Currency implements RepresentsCurrency
 			throw new InvalidCurrencyException( 'Minor unit factor must be greater than 0' );
 		}
 
-		$this->isoCode = strtoupper( $isoCode );
+		$this->isoCode   = strtoupper( $isoCode );
+		$this->minorUnit = (int)log10( $this->minorUnitFactor );
 	}
 
 	public function getIsoCode(): string
@@ -37,6 +40,11 @@ class Currency implements RepresentsCurrency
 	public function getMinorUnitFactor(): int
 	{
 		return $this->minorUnitFactor;
+	}
+
+	public function getMinorUnit(): int
+	{
+		return $this->minorUnit;
 	}
 
 	public function equals( RepresentsCurrency $other ): bool
