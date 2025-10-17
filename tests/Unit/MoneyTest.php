@@ -311,7 +311,7 @@ class MoneyTest extends TestCase
 	public function testCanBeSerializedToJson(): void
 	{
 		self::assertEquals(
-			'{"amount":1,"currencyCode":"EUR"}',
+			'{"amount":1,"currency":{"iso-code":"EUR","symbol":"\u20ac","minor-unit-factor":100,"minor-unit":2}}',
 			json_encode( new Money( 1, $this->buildEurCurrency() ), JSON_THROW_ON_ERROR )
 		);
 	}

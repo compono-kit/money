@@ -14,7 +14,7 @@
 	"require": {
 		"php": ">=8.0",
 		"ext-json": "*",
-		"compono-kit/money-interfaces": "1.0.0"
+		"compono-kit/money-interfaces": "^1.0.0"
 	},
 	"require-dev": {
 		"roave/security-advisories": "dev-latest",
