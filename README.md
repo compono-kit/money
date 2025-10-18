@@ -4,6 +4,7 @@ Implementation for compomo-kit/money-interfaces
 
 ## Contents
 
+* [Requirements](#requirements)
 * [Basics](#basics)
 * [Comparisons](#comparisons)
 * [Allocation](#allocation)
@@ -11,6 +12,12 @@ Implementation for compomo-kit/money-interfaces
 * [Json](#json)
 * [Exceptions](#exceptions)
 * [MoneyAggregator](#moneyaggregator)
+
+
+## Requirements
+
+* PHP >= 8.0
+* compono-kit/money-interfaces
 
 ## Basics
 
