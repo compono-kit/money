@@ -8,8 +8,12 @@ use ComponoKit\Money\Interfaces\RepresentsMoney;
 
 class MoneyFactory implements BuildsMoneys
 {
-	public function build( int $amount, RepresentsCurrency $currency ): RepresentsMoney
+	public function __construct( private RepresentsCurrency $currency )
 	{
-		return new Money( $amount, $currency );
+	}
+
+	public function build( int $amount ): RepresentsMoney
+	{
+		return new Money( $amount, $this->currency );
 	}
 }

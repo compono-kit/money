@@ -14,8 +14,8 @@ class MoneyFactoryTest extends TestCase
 		$expectedCurrency = $this->createMock( RepresentsCurrency::class );
 		$expectedAmount   = 1234;
 
-		$factory = new MoneyFactory();
-		$money   = $factory->build( $expectedAmount, $expectedCurrency );
+		$factory = new MoneyFactory( $expectedCurrency );
+		$money   = $factory->build( $expectedAmount );
 
 		$this->assertInstanceOf( RepresentsMoney::class, $money );
 		$this->assertSame( $expectedAmount, $money->getAmount() );
