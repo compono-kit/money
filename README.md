@@ -19,6 +19,13 @@ Implementation for compomo-kit/money-interfaces
 * PHP >= 8.0
 * compono-kit/money-interfaces
 
+## 📦 Installation
+
+```bash
+composer require compono-kit/money
+```
+
+
 ## Basics
 
 ````PHP
@@ -77,21 +84,21 @@ printf( "30%% of 5000 = %d", $allocatedMoney[1]->getAmount() ); //30% of 5000 = 
 ## Value added tax calculation
 
 ````PHP
-$extractedPercentage = (new Money( 5000, 'EUR' ))->extractPercentage( 19 ); //19% Mwst.-Satz, 5000 = Bruttobetrag
+$extractedPercentage = (new Money( 5000, 'EUR' ))->extractPercentage( 19 ); //19% VAT rate, 5000 = Gross amount
 printf(
 	"%d + %d = 5000",
 	$extractedPercentage->getSubTotal()->getAmount(),
 	$extractedPercentage->getPercentage()->getAmount()
 ); // 4202 + 798 = 5000
 
-$extractedPercentage->getSubTotal(); //Nettobetrag
-$extractedPercentage->getPercentage(); //Mwst.-Betrag
+$extractedPercentage->getSubTotal(); //Net amount
+$extractedPercentage->getPercentage(); //VAT amount
 ````
 
 ## Json
 
 ````PHP
-json_encode( (new Money( 5000, 'EUR' )) ); //{ "amount": "5000", "currency": "EUR" }
+json_encode( (new Money( 5000, new Currency( 'EUR', '€', 100 ) )) ); //{ "amount": "5000", "currency": { "iso-code": "EUR", "symbol": "€", "minor-unit-factor": 100, "minor-unit": 2 } }
 ````
 
 ## Exceptions
