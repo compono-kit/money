@@ -21,7 +21,7 @@ class Money implements RepresentsMoney
 		PHP_ROUND_HALF_ODD  => 1,
 	];
 
-	public function __construct( private int $amount, private RepresentsCurrency $currency )
+	public function __construct( private readonly int $amount, private readonly RepresentsCurrency $currency )
 	{
 	}
 
