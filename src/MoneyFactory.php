@@ -8,7 +8,7 @@ use ComponoKit\Money\Interfaces\RepresentsMoney;
 
 class MoneyFactory implements BuildsMoneys
 {
-	public function __construct( private RepresentsCurrency $currency )
+	public function __construct( private readonly RepresentsCurrency $currency )
 	{
 	}
 
