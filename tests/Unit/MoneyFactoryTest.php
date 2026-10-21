@@ -11,7 +11,7 @@ class MoneyFactoryTest extends TestCase
 {
 	public function testBuildReturnsMoneyInstanceWithCorrectAmountAndCurrency(): void
 	{
-		$expectedCurrency = $this->createMock( RepresentsCurrency::class );
+		$expectedCurrency = $this->createStub( RepresentsCurrency::class );
 		$expectedAmount   = 1234;
 
 		$factory = new MoneyFactory( $expectedCurrency );

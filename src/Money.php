@@ -2,24 +2,16 @@
 
 namespace ComponoKit\Money;
 
+use ComponoKit\Money\Exceptions\AmountOutOfRangeException;
 use ComponoKit\Money\Exceptions\InvalidRatioException;
-use ComponoKit\Money\Exceptions\InvalidRoundingModeException;
-use ComponoKit\Money\Interfaces\RepresentExtractedPercentage;
 use ComponoKit\Money\Interfaces\RepresentsCurrency;
+use ComponoKit\Money\Interfaces\RepresentsExtractedPercentage;
 use ComponoKit\Money\Interfaces\RepresentsMoney;
 use ComponoKit\Money\Traits\AssertingCurrencies;
 
 class Money implements RepresentsMoney
 {
 	use AssertingCurrencies;
-
-	/** @var int[] */
-	private static array $roundingModes = [
-		PHP_ROUND_HALF_UP   => 1,
-		PHP_ROUND_HALF_DOWN => 1,
-		PHP_ROUND_HALF_EVEN => 1,
-		PHP_ROUND_HALF_ODD  => 1,
-	];
 
 	public function __construct( private readonly int $amount, private readonly RepresentsCurrency $currency )
 	{
@@ -35,9 +27,9 @@ class Money implements RepresentsMoney
 		return $this->getCurrency()->getIsoCode();
 	}
 
-	public static function fromFloat( float $amount, RepresentsCurrency $currency, int $roundingMode = PHP_ROUND_HALF_UP ): static
+	public static function fromFloat( float $amount, RepresentsCurrency $currency, \RoundingMode $roundingMode = \RoundingMode::HalfAwayFromZero ): static
 	{
-		return new static( (int)round( $amount * $currency->getMinorUnitFactor(), 0, $roundingMode ), $currency );
+		return new static( self::toAmount( round( $amount * $currency->getMinorUnitFactor(), 0, $roundingMode ) ), $currency );
 	}
 
 	public function getCurrency(): RepresentsCurrency
@@ -45,49 +37,45 @@ class Money implements RepresentsMoney
 		return $this->currency;
 	}
 
-	public function add( RepresentsMoney $other ): RepresentsMoney
+	public function add( RepresentsMoney $other ): static
 	{
 		self::assertSameCurrency( $this, $other );
 
-		return new static( $this->amount + $other->getAmount(), $this->getCurrency() );
+		return new static( self::guardIntegerResult( $this->amount + $other->getAmount() ), $this->getCurrency() );
 	}
 
-	public function subtract( RepresentsMoney $other ): RepresentsMoney
+	public function subtract( RepresentsMoney $other ): static
 	{
 		self::assertSameCurrency( $this, $other );
 
-		return new static( $this->amount - $other->getAmount(), $this->getCurrency() );
+		return new static( self::guardIntegerResult( $this->amount - $other->getAmount() ), $this->getCurrency() );
 	}
 
-	public function multiply( float $factor, int $roundingMode = PHP_ROUND_HALF_UP ): RepresentsMoney
+	public function multiply( float $factor, \RoundingMode $roundingMode = \RoundingMode::HalfAwayFromZero ): static
 	{
-		$this->guardRoundingModeIsValid( $roundingMode );
-
-		return new static( (int)round( $this->amount * $factor, 0, $roundingMode ), $this->getCurrency() );
+		return new static( self::toAmount( round( $this->amount * $factor, 0, $roundingMode ) ), $this->getCurrency() );
 	}
 
-	public function divide( float $divisor, int $roundingMode = PHP_ROUND_HALF_UP ): RepresentsMoney
+	public function divide( float $divisor, \RoundingMode $roundingMode = \RoundingMode::HalfAwayFromZero ): static
 	{
-		$this->guardRoundingModeIsValid( $roundingMode );
-
-		return new static( (int)round( $this->amount / $divisor, 0, $roundingMode ), $this->getCurrency() );
+		return new static( self::toAmount( round( $this->amount / $divisor, 0, $roundingMode ) ), $this->getCurrency() );
 	}
 
-	public function mod( RepresentsMoney $money ): RepresentsMoney
+	public function mod( RepresentsMoney $money ): static
 	{
 		self::assertSameCurrency( $this, $money );
 
 		return new static( $this->amount % $money->getAmount(), $this->getCurrency() );
 	}
 
-	public function absolute(): RepresentsMoney
+	public function absolute(): static
 	{
-		return new static( (int)round( abs( $this->amount ) ), $this->getCurrency() );
+		return new static( self::guardIntegerResult( abs( $this->amount ) ), $this->getCurrency() );
 	}
 
-	public function negate(): RepresentsMoney
+	public function negate(): static
 	{
-		return new static( -1 * $this->amount, $this->getCurrency() );
+		return new static( self::guardIntegerResult( -1 * $this->amount ), $this->getCurrency() );
 	}
 
 	public function ratioOf( RepresentsMoney $money ): float
@@ -118,12 +106,15 @@ class Money implements RepresentsMoney
 	}
 
 	/**
-	 * @param int $numberOfTargets
-	 *
-	 * @return \Iterator<int,RepresentsMoney>
+	 * @return \Iterator<int,static>
 	 */
 	public function allocateToTargets( int $numberOfTargets ): \Iterator
 	{
+		if ( $numberOfTargets <= 0 )
+		{
+			throw new InvalidRatioException( 'Total ratio must be greater than 0' );
+		}
+
 		foreach ( $this->allocateAmountByRatios( $this->amount, array_fill( 0, $numberOfTargets, 1 ) ) as $share )
 		{
 			yield new static( $share, $this->getCurrency() );
@@ -131,9 +122,9 @@ class Money implements RepresentsMoney
 	}
 
 	/**
-	 * @param array|int[] $ratios
+	 * @param int[] $ratios
 	 *
-	 * @return \Iterator<int,RepresentsMoney>
+	 * @return \Iterator<int,static>
 	 */
 	public function allocateByRatios( array $ratios ): \Iterator
 	{
@@ -143,12 +134,10 @@ class Money implements RepresentsMoney
 		}
 	}
 
-	public function extractPercentage( float $percentage, int $roundingMode = PHP_ROUND_HALF_UP ): RepresentExtractedPercentage
+	public function extractPercentage( float $percentage, \RoundingMode $roundingMode = \RoundingMode::HalfAwayFromZero ): RepresentsExtractedPercentage
 	{
-		$this->guardRoundingModeIsValid( $roundingMode );
-
-		$percentageAmount = new self(
-			(int)round( $this->amount / (100 + $percentage) * $percentage, 0, $roundingMode ),
+		$percentageAmount = new static(
+			self::toAmount( round( $this->amount / (100 + $percentage) * $percentage, 0, $roundingMode ) ),
 			$this->getCurrency()
 		);
 
@@ -171,7 +160,9 @@ class Money implements RepresentsMoney
 
 	public function greaterThanOrEqual( RepresentsMoney $other ): bool
 	{
-		return $this->greaterThan( $other ) || $this->equals( $other );
+		self::assertSameCurrency( $this, $other );
+
+		return $this->compareTo( $other ) >= 0;
 	}
 
 	public function lessThan( RepresentsMoney $other ): bool
@@ -183,12 +174,14 @@ class Money implements RepresentsMoney
 
 	public function lessThanOrEqual( RepresentsMoney $other ): bool
 	{
-		return $this->lessThan( $other ) || $this->equals( $other );
+		self::assertSameCurrency( $this, $other );
+
+		return $this->compareTo( $other ) <= 0;
 	}
 
 	public function hasSameCurrency( RepresentsMoney $money ): bool
 	{
-		return $money->getCurrencyCode() === $this->getCurrencyCode();
+		return $this->currency->equals( $money->getCurrency() );
 	}
 
 	public function jsonSerialize(): array
@@ -204,8 +197,36 @@ class Money implements RepresentsMoney
 		];
 	}
 
+	private static function toAmount( float $value ): int
+	{
+		if ( !is_finite( $value ) || $value < PHP_INT_MIN || $value >= PHP_INT_MAX )
+		{
+			throw new AmountOutOfRangeException( 'Amount is out of the integer range: ' . $value );
+		}
+
+		return (int)$value;
+	}
+
+	private static function guardIntegerResult( int|float $value ): int
+	{
+		if ( is_float( $value ) )
+		{
+			throw new AmountOutOfRangeException( 'Amount is out of the integer range: ' . $value );
+		}
+
+		return $value;
+	}
+
 	private function allocateAmountByRatios( int $amount, array $ratios ): array
 	{
+		foreach ( $ratios as $ratio )
+		{
+			if ( !is_int( $ratio ) || $ratio < 0 )
+			{
+				throw new InvalidRatioException( 'Ratio must be an integer equal or greater than 0' );
+			}
+		}
+
 		$totalRatio = array_sum( $ratios );
 
 		if ( $totalRatio <= 0 )
@@ -218,11 +239,6 @@ class Money implements RepresentsMoney
 
 		foreach ( $ratios as $key => $ratio )
 		{
-			if ( $ratio < 0 )
-			{
-				throw new InvalidRatioException( 'Ratio must be equal or greater than 0' );
-			}
-
 			$share          = (int)floor( $amount * $ratio / $totalRatio );
 			$shares[ $key ] = $share;
 			$remaining      -= $share;
@@ -271,13 +287,5 @@ class Money implements RepresentsMoney
 	private function compareTo( RepresentsMoney $other ): int
 	{
 		return $this->amount <=> $other->getAmount();
-	}
-
-	private function guardRoundingModeIsValid( int $roundingMode ): void
-	{
-		if ( !isset( self::$roundingModes[ $roundingMode ] ) )
-		{
-			throw new InvalidRoundingModeException( sprintf( '%d is not a valid rounding mode', $roundingMode ) );
-		}
 	}
 }
