@@ -4,11 +4,10 @@ services:
       dockerfile: Dockerfile
       context: .docker/composer
     container_name: money_composer
-    restart: no
+    restart: "no"
+    network_mode: bridge
     working_dir: /app
+    environment:
+      COMPOSER_AUTH: '{"github-oauth":{"github.com":"${GITHUB_TOKEN}"}}'
     volumes:
       - ./:/app
-networks:
-  default:
-    external: true
-    name: shared

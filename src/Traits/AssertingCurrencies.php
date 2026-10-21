@@ -11,7 +11,7 @@ trait AssertingCurrencies
 	{
 		if ( !$moneyToCompareWith->hasSameCurrency( $money ) )
 		{
-			throw new CurrencyMismatchException( sprintf( 'Currency mismatch: %s != %s', $moneyToCompareWith->getCurrencyCode(), $money->getCurrencyCode() ) );
+			throw new CurrencyMismatchException( sprintf( 'Currency mismatch: %s != %s', $moneyToCompareWith->getCurrency()->getIsoCode(), $money->getCurrency()->getIsoCode() ) );
 		}
 	}
 }

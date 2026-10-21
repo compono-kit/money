@@ -4,6 +4,7 @@ namespace ComponoKit\Money\Tests\Unit;
 
 use ComponoKit\Money\Currency;
 use ComponoKit\Money\Exceptions\InvalidCurrencyException;
+use ComponoKit\Money\Interfaces\RepresentsCurrency;
 use PHPUnit\Framework\TestCase;
 
 class CurrencyTest extends TestCase
@@ -57,6 +58,15 @@ class CurrencyTest extends TestCase
 		$currency2 = new Currency( 'eur', '€', 100 );
 
 		$this->assertTrue( $currency1->equals( $currency2 ) );
+	}
+
+	public function testEqualsWithForeignCurrencyImplementation(): void
+	{
+		$foreignCurrency = $this->createStub( RepresentsCurrency::class );
+		$foreignCurrency->method( 'getIsoCode' )->willReturn( 'EUR' );
+
+		$this->assertTrue( new Currency( 'EUR', '€', 100 )->equals( $foreignCurrency ) );
+		$this->assertFalse( new Currency( 'USD', '$', 100 )->equals( $foreignCurrency ) );
 	}
 
 	public function testEqualsReturnsFalseForDifferentIsoCode()

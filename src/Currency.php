@@ -49,6 +49,6 @@ class Currency implements RepresentsCurrency
 
 	public function equals( RepresentsCurrency $other ): bool
 	{
-		return $this->isoCode === $other->isoCode;
+		return $this->isoCode === $other->getIsoCode();
 	}
 }

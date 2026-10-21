@@ -2,10 +2,13 @@
 
 namespace ComponoKit\Money\Tests\Unit;
 
+use ComponoKit\Money\Exceptions\AmountOutOfRangeException;
 use ComponoKit\Money\Exceptions\CurrencyMismatchException;
-use ComponoKit\Money\Exceptions\InvalidRoundingModeException;
+use ComponoKit\Money\Exceptions\InvalidRatioException;
+use ComponoKit\Money\Interfaces\RepresentsCurrency;
 use ComponoKit\Money\Money;
 use ComponoKit\Money\Tests\Unit\Traits\BuildingCurrencies;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 class MoneyTest extends TestCase
@@ -19,12 +22,12 @@ class MoneyTest extends TestCase
 
 	public function testGetAmount(): void
 	{
-		self::assertEquals( 1234, (new Money( 1234, $this->buildEurCurrency() ))->getAmount() );
+		self::assertEquals( 1234, new Money( 1234, $this->buildEurCurrency() )->getAmount() );
 	}
 
 	public function testGetCurrencyCode(): void
 	{
-		self::assertEquals( 'EUR', (new Money( 0, $this->buildEurCurrency() ))->getCurrencyCode() );
+		self::assertEquals( 'EUR', new Money( 0, $this->buildEurCurrency() )->getCurrencyCode() );
 	}
 
 	public function testAnotherMoneyObjectWithSameCurrencyCanBeAdded(): void
@@ -87,12 +90,80 @@ class MoneyTest extends TestCase
 		self::assertEquals( 2, $money2->getAmount() );
 	}
 
-	public function testExceptionIsRaisedWhenMultipliedUsingInvalidRoundingMode(): void
+	public static function RoundingModeDataProvider(): \Iterator
 	{
-		$this->expectException( InvalidRoundingModeException::class );
+		yield 'half away from zero positive' => [ 5, \RoundingMode::HalfAwayFromZero, 3 ];
+		yield 'half away from zero negative' => [ -5, \RoundingMode::HalfAwayFromZero, -3 ];
+		yield 'half towards zero positive' => [ 5, \RoundingMode::HalfTowardsZero, 2 ];
+		yield 'half towards zero negative' => [ -5, \RoundingMode::HalfTowardsZero, -2 ];
+		yield 'half even' => [ 5, \RoundingMode::HalfEven, 2 ];
+		yield 'half odd' => [ 5, \RoundingMode::HalfOdd, 3 ];
+		yield 'towards zero' => [ 7, \RoundingMode::TowardsZero, 3 ];
+		yield 'away from zero' => [ 7, \RoundingMode::AwayFromZero, 4 ];
+		yield 'negative infinity' => [ -7, \RoundingMode::NegativeInfinity, -4 ];
+		yield 'positive infinity' => [ -7, \RoundingMode::PositiveInfinity, -3 ];
+	}
 
-		$money = new Money( 1, $this->buildEurCurrency() );
-		$money->multiply( 2, 0 );
+	#[DataProvider( 'RoundingModeDataProvider' )]
+	public function testMultiplyUsesRoundingMode( int $amount, \RoundingMode $roundingMode, int $expectedAmount ): void
+	{
+		self::assertSame( $expectedAmount, new Money( $amount, $this->buildEurCurrency() )->multiply( 0.5, $roundingMode )->getAmount() );
+	}
+
+	#[DataProvider( 'RoundingModeDataProvider' )]
+	public function testDivideUsesRoundingMode( int $amount, \RoundingMode $roundingMode, int $expectedAmount ): void
+	{
+		self::assertSame( $expectedAmount, new Money( $amount, $this->buildEurCurrency() )->divide( 2, $roundingMode )->getAmount() );
+	}
+
+	#[DataProvider( 'RoundingModeDataProvider' )]
+	public function testFromFloatUsesRoundingMode( int $amount, \RoundingMode $roundingMode, int $expectedAmount ): void
+	{
+		self::assertSame( $expectedAmount, Money::fromFloat( $amount / 200, $this->buildEurCurrency(), $roundingMode )->getAmount() );
+	}
+
+	public static function AmountOutOfRangeDataProvider(): \Iterator
+	{
+		yield 'multiply' => [ static fn( Money $money ) => $money->multiply( 1e30 ) ];
+		yield 'divide' => [ static fn( Money $money ) => $money->divide( 1e-30 ) ];
+		yield 'multiply by infinity' => [ static fn( Money $money ) => $money->multiply( INF ) ];
+		yield 'add' => [ static fn( Money $money ) => new Money( PHP_INT_MAX, $money->getCurrency() )->add( $money ) ];
+		yield 'subtract' => [ static fn( Money $money ) => new Money( PHP_INT_MIN, $money->getCurrency() )->subtract( $money ) ];
+		yield 'negate' => [ static fn( Money $money ) => new Money( PHP_INT_MIN, $money->getCurrency() )->negate() ];
+		yield 'absolute' => [ static fn( Money $money ) => new Money( PHP_INT_MIN, $money->getCurrency() )->absolute() ];
+		yield 'from float' => [ static fn( Money $money ) => Money::fromFloat( 1e30, $money->getCurrency() ) ];
+	}
+
+	#[DataProvider( 'AmountOutOfRangeDataProvider' )]
+	public function testAmountOutOfRangeThrowsException( \Closure $calculation ): void
+	{
+		$this->expectException( AmountOutOfRangeException::class );
+
+		$calculation( new Money( 1, $this->buildEurCurrency() ) );
+	}
+
+	public function testHasSameCurrencyWithForeignCurrencyImplementation(): void
+	{
+		$foreignCurrency = $this->createStub( RepresentsCurrency::class );
+		$foreignCurrency->method( 'getIsoCode' )->willReturn( 'EUR' );
+		$foreignCurrency->method( 'equals' )->willReturnCallback( static fn( RepresentsCurrency $other ): bool => $other->getIsoCode() === 'EUR' );
+
+		self::assertTrue( new Money( 1, $this->buildEurCurrency() )->hasSameCurrency( new Money( 2, $foreignCurrency ) ) );
+		self::assertTrue( new Money( 1, $this->buildEurCurrency() )->add( new Money( 2, $foreignCurrency ) )->equals( new Money( 3, $this->buildEurCurrency() ) ) );
+	}
+
+	public function testAllocateToNegativeNumberOfTargetsThrowsException(): void
+	{
+		$this->expectException( InvalidRatioException::class );
+
+		iterator_to_array( new Money( 1, $this->buildEurCurrency() )->allocateToTargets( -1 ) );
+	}
+
+	public function testAllocateByNonIntegerRatiosThrowsException(): void
+	{
+		$this->expectException( InvalidRatioException::class );
+
+		iterator_to_array( new Money( 1, $this->buildEurCurrency() )->allocateByRatios( [ 1.5, 2 ] ) );
 	}
 
 	public function testCanBeDividedByAFactor(): void
@@ -104,27 +175,19 @@ class MoneyTest extends TestCase
 		self::assertEquals( 3, $money2->getAmount() );
 	}
 
-	public function testExceptionIsRaisedWhenDividedUsingInvalidRoundingMode(): void
-	{
-		$this->expectException( InvalidRoundingModeException::class );
-
-		$money = new Money( 6, $this->buildEurCurrency() );
-		$money->divide( 2, 0 );
-	}
-
 	public function testModulo(): void
 	{
-		self::assertEquals( new Money( 2, $this->buildEurCurrency() ), (new Money( 5, $this->buildEurCurrency() ))->mod( new Money( 3, $this->buildEurCurrency() ) ) );
+		self::assertEquals( new Money( 2, $this->buildEurCurrency() ), new Money( 5, $this->buildEurCurrency() )->mod( new Money( 3, $this->buildEurCurrency() ) ) );
 	}
 
 	public function testAbsolute(): void
 	{
-		self::assertEquals( new Money( 2, $this->buildEurCurrency() ), (new Money( -2, $this->buildEurCurrency() ))->absolute() );
+		self::assertEquals( new Money( 2, $this->buildEurCurrency() ), new Money( -2, $this->buildEurCurrency() )->absolute() );
 	}
 
 	public function testNegate(): void
 	{
-		self::assertEquals( new Money( -2, $this->buildEurCurrency() ), (new Money( 2, $this->buildEurCurrency() ))->negate() );
+		self::assertEquals( new Money( -2, $this->buildEurCurrency() ), new Money( 2, $this->buildEurCurrency() )->negate() );
 	}
 
 	public function testRatioOf(): void
@@ -137,23 +200,23 @@ class MoneyTest extends TestCase
 
 	public function testIsZero(): void
 	{
-		self::assertFalse( (new Money( 1, $this->buildEurCurrency() ))->isZero() );
-		self::assertFalse( (new Money( -1, $this->buildEurCurrency() ))->isZero() );
-		self::assertTrue( (new Money( 0, $this->buildEurCurrency() ))->isZero() );
+		self::assertFalse( new Money( 1, $this->buildEurCurrency() )->isZero() );
+		self::assertFalse( new Money( -1, $this->buildEurCurrency() )->isZero() );
+		self::assertTrue( new Money( 0, $this->buildEurCurrency() )->isZero() );
 	}
 
 	public function testIsPositive(): void
 	{
-		self::assertFalse( (new Money( -1, $this->buildEurCurrency() ))->isPositive() );
-		self::assertFalse( (new Money( 0, $this->buildEurCurrency() ))->isPositive() );
-		self::assertTrue( (new Money( 1, $this->buildEurCurrency() ))->isPositive() );
+		self::assertFalse( new Money( -1, $this->buildEurCurrency() )->isPositive() );
+		self::assertFalse( new Money( 0, $this->buildEurCurrency() )->isPositive() );
+		self::assertTrue( new Money( 1, $this->buildEurCurrency() )->isPositive() );
 	}
 
 	public function testIsNegative(): void
 	{
-		self::assertFalse( (new Money( 0, $this->buildEurCurrency() ))->isNegative() );
-		self::assertFalse( (new Money( 1, $this->buildEurCurrency() ))->isNegative() );
-		self::assertTrue( (new Money( -1, $this->buildEurCurrency() ))->isNegative() );
+		self::assertFalse( new Money( 0, $this->buildEurCurrency() )->isNegative() );
+		self::assertFalse( new Money( 1, $this->buildEurCurrency() )->isNegative() );
+		self::assertTrue( new Money( -1, $this->buildEurCurrency() )->isNegative() );
 	}
 
 	public function testCanBeAllocatedToNumberOfTargets(): void
@@ -254,8 +317,8 @@ class MoneyTest extends TestCase
 
 	public function testHasSameCurrency(): void
 	{
-		self::assertTrue( (new Money( 1, $this->buildEurCurrency() ))->hasSameCurrency( new Money( 5, $this->buildEurCurrency() ) ) );
-		self::assertFalse( (new Money( 1, $this->buildEurCurrency() ))->hasSameCurrency( new Money( 1, $this->buildUsdCurrency() ) ) );
+		self::assertTrue( new Money( 1, $this->buildEurCurrency() )->hasSameCurrency( new Money( 5, $this->buildEurCurrency() ) ) );
+		self::assertFalse( new Money( 1, $this->buildEurCurrency() )->hasSameCurrency( new Money( 1, $this->buildUsdCurrency() ) ) );
 	}
 
 	public function testIfCurrencyMismatchExceptionIsThrownIfCurrenciesDoesNotMatchUsingEquals(): void

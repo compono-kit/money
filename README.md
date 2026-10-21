@@ -16,7 +16,7 @@ Implementation for compomo-kit/money-interfaces
 
 ## Requirements
 
-* PHP >= 8.3
+* PHP >= 8.5
 * compono-kit/money-interfaces
 
 ## 📦 Installation
@@ -34,6 +34,7 @@ composer require compono-kit/money
 (new Money( 5000, 'EUR' ))->subtract( new Money( 99, 'EUR' ) )->getAmount(); //4901
 (new Money( 5000, 'EUR' ))->multiply( 2 )->getAmount(); //10000
 (new Money( 5000, 'EUR' ))->divide( 2 )->getAmount(); //2500
+(new Money( 5, 'EUR' ))->divide( 2, \RoundingMode::HalfEven )->getAmount(); //2
 
 (new Money( 5000, 'EUR' ))->mod( new Money( 4000, 'EUR' ) )->getAmount(); //1000
 (new Money( -5000, 'EUR' ))->absolute()->getAmount(); //5000

@@ -2,10 +2,10 @@
 
 namespace ComponoKit\Money;
 
-use ComponoKit\Money\Interfaces\RepresentExtractedPercentage;
+use ComponoKit\Money\Interfaces\RepresentsExtractedPercentage;
 use ComponoKit\Money\Interfaces\RepresentsMoney;
 
-class ExtractedPercentage implements RepresentExtractedPercentage
+class ExtractedPercentage implements RepresentsExtractedPercentage
 {
 	public function __construct( private readonly RepresentsMoney $percentage, private readonly RepresentsMoney $subTotal )
 	{

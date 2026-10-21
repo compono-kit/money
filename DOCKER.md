@@ -1,5 +1,11 @@
 ## Docker
 
-* `docker-compose build --build-arg GITHUB_TOKEN="{TOKEN}"`
-* `docker-compose up -d`
-* `docker-compose run --rm money_composer update -vvv`
+1. Create a `.env` file next to `docker-compose.yml` containing `GITHUB_TOKEN=<token>`
+2. `docker-compose build`
+3. `docker-compose run --rm money_composer install`
+
+The token is passed to Composer at runtime via `COMPOSER_AUTH` and is not stored in the image.
+
+### Tests
+
+* `docker-compose run --rm money_composer test`
