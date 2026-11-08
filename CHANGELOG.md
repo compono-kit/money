@@ -13,7 +13,6 @@
 
 ### Added
 * `AmountOutOfRangeException`
-* Composer script `test`
 
 ### Removed
 * [BC] `InvalidRoundingModeException`, invalid rounding modes are prevented by the `\RoundingMode` type
